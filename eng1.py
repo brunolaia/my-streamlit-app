@@ -16,7 +16,7 @@ st.title("📊 Dashboard - Engenharia NPO - CEDOC")
 # UPLOAD
 # =========================
 arquivo = st.file_uploader(
-    "📁 Envie sua planilha Excel - Rev.3 - Desenvolvido por Bruno Laia",
+    "📁 Envie sua planilha Excel - Rev.4 - Desenvolvido por Bruno Laia",
     type=["xlsx"]
 )
 
@@ -29,9 +29,9 @@ if arquivo is None:
 # =========================
 df = pd.read_excel(arquivo)
 
-# Mantém apenas as 3 primeiras colunas
-df = df.iloc[:, :3]
-df.columns = ["Data", "Categoria", "Registro"]
+# Agora mantém 4 colunas
+df = df.iloc[:, :4]
+df.columns = ["Data", "Categoria", "Registro", "TipoDocumento"]
 
 # =========================
 # TRATAMENTO DE DATAS
@@ -47,18 +47,9 @@ df["Dia"] = df["Data"].dt.day
 # MESES
 # =========================
 meses = {
-    1: "JANEIRO",
-    2: "FEVEREIRO",
-    3: "MARÇO",
-    4: "ABRIL",
-    5: "MAIO",
-    6: "JUNHO",
-    7: "JULHO",
-    8: "AGOSTO",
-    9: "SETEMBRO",
-    10: "OUTUBRO",
-    11: "NOVEMBRO",
-    12: "DEZEMBRO"
+    1: "JANEIRO", 2: "FEVEREIRO", 3: "MARÇO", 4: "ABRIL",
+    5: "MAIO", 6: "JUNHO", 7: "JULHO", 8: "AGOSTO",
+    9: "SETEMBRO", 10: "OUTUBRO", 11: "NOVEMBRO", 12: "DEZEMBRO"
 }
 
 df["Mês"] = df["MesNum"].map(meses)
@@ -76,23 +67,13 @@ st.success("✅ Dados carregados com sucesso")
 # =========================
 st.sidebar.header("Filtros")
 
-categorias = ["TODAS"] + sorted(
-    df["Categoria"].dropna().unique().tolist()
-)
+categorias = ["TODAS"] + sorted(df["Categoria"].dropna().unique().tolist())
+anos = ["TODOS"] + sorted(df["Ano"].unique().tolist())
+tipos = ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique().tolist())
 
-anos = ["TODOS"] + sorted(
-    df["Ano"].unique().tolist()
-)
-
-categoria = st.sidebar.selectbox(
-    "📂 Categoria",
-    categorias
-)
-
-ano = st.sidebar.selectbox(
-    "📅 Ano",
-    anos
-)
+categoria = st.sidebar.selectbox("📂 Categoria", categorias)
+ano = st.sidebar.selectbox("📅 Ano", anos)
+tipo_doc = st.sidebar.selectbox("📄 Tipo de Documento", tipos)
 
 # =========================
 # APLICA FILTROS
@@ -100,14 +81,13 @@ ano = st.sidebar.selectbox(
 df_filtro = df.copy()
 
 if categoria != "TODAS":
-    df_filtro = df_filtro[
-        df_filtro["Categoria"] == categoria
-    ]
+    df_filtro = df_filtro[df_filtro["Categoria"] == categoria]
 
 if ano != "TODOS":
-    df_filtro = df_filtro[
-        df_filtro["Ano"] == ano
-    ]
+    df_filtro = df_filtro[df_filtro["Ano"] == ano]
+
+if tipo_doc != "TODOS":
+    df_filtro = df_filtro[df_filtro["TipoDocumento"] == tipo_doc]
 
 # =========================
 # RESUMO
@@ -117,22 +97,13 @@ st.subheader("📈 Resumo")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric(
-        "Total de Registros",
-        len(df_filtro)
-    )
+    st.metric("Total de Registros", len(df_filtro))
 
 with col2:
-    st.metric(
-        "Categorias",
-        df_filtro["Categoria"].nunique()
-    )
+    st.metric("Categorias", df_filtro["Categoria"].nunique())
 
 with col3:
-    st.metric(
-        "Anos",
-        df_filtro["Ano"].nunique()
-    )
+    st.metric("Tipos de Documento", df_filtro["TipoDocumento"].nunique())
 
 # =========================
 # GRÁFICOS
@@ -141,26 +112,12 @@ st.subheader("📊 Registros por Mês e Semana")
 
 cores = px.colors.qualitative.Set2
 
-ordem_meses = [
-    "JANEIRO",
-    "FEVEREIRO",
-    "MARÇO",
-    "ABRIL",
-    "MAIO",
-    "JUNHO",
-    "JULHO",
-    "AGOSTO",
-    "SETEMBRO",
-    "OUTUBRO",
-    "NOVEMBRO",
-    "DEZEMBRO"
+ordem_meses = list(meses.values())
+
+meses_com_dados = [
+    mes for mes in ordem_meses
+    if not df_filtro[df_filtro["Mês"] == mes].empty
 ]
-
-meses_com_dados = []
-
-for mes in ordem_meses:
-    if not df_filtro[df_filtro["Mês"] == mes].empty:
-        meses_com_dados.append(mes)
 
 # =========================
 # 3 GRÁFICOS POR LINHA
@@ -173,33 +130,22 @@ for linha in range(0, len(meses_com_dados), 3):
 
         with cols[idx]:
 
-            df_mes = df_filtro[
-                df_filtro["Mês"] == mes
-            ]
+            df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = (
                 df_mes.groupby("Semana")
                 .agg(
                     Quantidade=("Registro", "count"),
-                    Registros=(
-                        "Registro",
-                        lambda x: "<br>".join(
-                            map(str, x)
-                        )
-                    )
+                    Registros=("Registro", lambda x: "<br>".join(map(str, x)))
                 )
                 .reset_index()
             )
 
             semana_df["SemanaNum"] = (
-                semana_df["Semana"]
-                .str.extract(r"(\d+)")
-                .astype(int)
+                semana_df["Semana"].str.extract(r"(\d+)").astype(int)
             )
 
-            semana_df = semana_df.sort_values(
-                "SemanaNum"
-            )
+            semana_df = semana_df.sort_values("SemanaNum")
 
             fig = px.bar(
                 semana_df,
@@ -213,9 +159,7 @@ for linha in range(0, len(meses_com_dados), 3):
 
             fig.update_traces(
                 width=0.35,
-                customdata=semana_df[
-                    ["Registros"]
-                ],
+                customdata=semana_df[["Registros"]],
                 hovertemplate=
                 "<b>%{x}</b><br>" +
                 "Quantidade: %{y}<br><br>" +
@@ -224,27 +168,16 @@ for linha in range(0, len(meses_com_dados), 3):
             )
 
             fig.update_layout(
-                title={
-                    "text": f"📅 {mes}",
-                    "x": 0.5
-                },
+                title={"text": f"📅 {mes}", "x": 0.5},
                 height=320,
-                margin=dict(
-                    l=10,
-                    r=10,
-                    t=50,
-                    b=10
-                ),
+                margin=dict(l=10, r=10, t=50, b=10),
                 showlegend=False,
                 xaxis_title="",
                 yaxis_title="Quantidade",
                 xaxis_tickangle=-45
             )
 
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
+            st.plotly_chart(fig, use_container_width=True)
 
 # =========================
 # DADOS DETALHADOS
@@ -252,9 +185,7 @@ for linha in range(0, len(meses_com_dados), 3):
 st.subheader("📋 Dados detalhados")
 
 st.dataframe(
-    df_filtro.sort_values(
-        ["Data"]
-    ),
+    df_filtro.sort_values(["Data"]),
     use_container_width=True,
     height=500
 )
