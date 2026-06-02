@@ -9,7 +9,7 @@ st.title("📊 Dashboard - Engenharia NPO")
 # =========================
 # UPLOAD
 # =========================
-arquivo = st.file_uploader("📁 Envie sua planilha Excel", type=["xlsx"])
+arquivo = st.file_uploader("📁 Envie sua planilha Excel - Rev.1 - Desenvolvido por Bruno Laia", type=["xlsx"])
 
 if arquivo is None:
     st.warning("Envie um arquivo Excel para começar.")
