@@ -55,12 +55,12 @@ if arquivo:
         # =========================
         # COLUNAS
         # =========================
-        adf_col = [c for c in df_mdls.columns if "ADF" in c][0]
+        adf_col = [c for c in df_mdls.columns if "ADF" in c][0]  # ADF NO.
         adf_docs_col = [c for c in df_docs.columns if "ADF" in c][0]
         grd_col = [c for c in df_docs.columns if "GRD" in c][0]
 
         # =========================
-        # NORMALIZAR ADF
+        # NORMALIZAR
         # =========================
         df_mdls["ADF_CLEAN"] = df_mdls[adf_col].apply(limpar_adf)
         df_docs["ADF_CLEAN"] = df_docs[adf_docs_col].apply(limpar_adf)
@@ -68,12 +68,15 @@ if arquivo:
         df_docs[grd_col] = df_docs[grd_col].fillna("").astype(str).str.strip()
 
         # =========================
-        # ALERTAS BASE
+        # 🔴 ALERTA CORRETO: ADF NO. VAZIA
         # =========================
-        df_adf_vazios = df_mdls[df_mdls[adf_col].astype(str).str.strip() == ""]
+        df_adf_vazios = df_mdls[
+            df_mdls[adf_col].isna() |
+            (df_mdls[adf_col].astype(str).str.strip() == "")
+        ]
 
         # =========================
-        # HISTÓRICO GRD (UMA POR LINHA)
+        # HISTÓRICO GRD
         # =========================
         df_historico = (
             df_docs.groupby("ADF_CLEAN")[grd_col]
@@ -83,7 +86,7 @@ if arquivo:
         )
 
         # =========================
-        # MERGE FINAL
+        # MERGE
         # =========================
         df_final = df_mdls.merge(
             df_historico,
@@ -92,7 +95,7 @@ if arquivo:
         )
 
         # =========================
-        # ALERTA SEM GRD
+        # 📛 ALERTA SEM GRD
         # =========================
         df_sem_grd = df_final[
             df_final["HISTORICO_GRD"].isna() |
@@ -100,7 +103,7 @@ if arquivo:
         ]
 
         # =========================
-        # STYLE ADF VAZIA (VERMELHO)
+        # STYLE
         # =========================
         def estilizar_linhas(row):
             if str(row.get(adf_col, "")).strip() == "":
@@ -108,20 +111,20 @@ if arquivo:
             return [""] * len(row)
 
         # =========================
-        # MENU SIDEBAR (SEPARADO)
+        # SIDEBAR - ALERTAS
         # =========================
         st.sidebar.title("🔎 MENU - ALERTAS")
 
-        # 🔴 ADF VAZIA
-        st.sidebar.markdown("### 🔴 ADFs sem preenchimento")
+        # 🔴 ADF NO. VAZIA (CORRIGIDO)
+        st.sidebar.markdown("### 🔴 ADF NO. sem preenchimento")
 
         if not df_adf_vazios.empty:
             st.sidebar.warning(f"{len(df_adf_vazios)} registros")
 
-            with st.sidebar.expander("Ver ADFs vazias"):
+            with st.sidebar.expander("Ver linhas sem ADF NO."):
                 st.dataframe(df_adf_vazios, use_container_width=True)
         else:
-            st.sidebar.success("Sem ADFs vazias ✔")
+            st.sidebar.success("Sem ADF NO. vazias ✔")
 
         # 📛 SEM GRD
         st.sidebar.markdown("### 📛 Sem Histórico GRD")
@@ -195,9 +198,6 @@ if arquivo:
 
             st.dataframe(resumo, use_container_width=True)
 
-            st.plotly_chart(px.bar(resumo, x=package_col, y="TOTAL_ADF", title="Total ADF"), use_container_width=True)
-            st.plotly_chart(px.bar(resumo, x=package_col, y="GRD_TOTAL", title="ADF com GRD"), use_container_width=True)
-
         # =========================
         # HISTÓRICO GRD
         # =========================
@@ -264,7 +264,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 8.1
+        Desenvolvido por Bruno Laia - Rev. 8.2
     </div>
     """,
     unsafe_allow_html=True
