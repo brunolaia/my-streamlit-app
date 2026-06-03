@@ -202,7 +202,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia
+        Desenvolvido por Bruno Laia - Rev. 5
     </div>
     """,
     unsafe_allow_html=True
