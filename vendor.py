@@ -2,23 +2,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from io import BytesIO
-import re
 
 st.set_page_config(page_title="Sistema MDL Vendor", layout="wide")
 
 st.title("📊 Sistema MDL Vendor - CEDOC")
 
 arquivo = st.file_uploader("Envie seu arquivo Excel", type=["xlsx"])
-
-# =========================
-# LIMPAR ADF
-# =========================
-def limpar_adf(adf):
-    if pd.isna(adf):
-        return ""
-    adf = str(adf).strip()
-    adf = re.sub(r"[_-][A-Z0-9]+$", "", adf)
-    return adf.strip()
 
 # =========================
 # EXPORT EXCEL
@@ -55,102 +44,65 @@ if arquivo:
         # =========================
         # COLUNAS
         # =========================
-        adf_col = [c for c in df_mdls.columns if "ADF" in c][0]  # ADF NO.
+        adf_col = [c for c in df_mdls.columns if "ADF" in c][0]
         adf_docs_col = [c for c in df_docs.columns if "ADF" in c][0]
         grd_col = [c for c in df_docs.columns if "GRD" in c][0]
+        package_col = [c for c in df_mdls.columns if "PACK" in c or "PACKAGE" in c][0]
 
         # =========================
-        # NORMALIZAR
+        # NORMALIZAÇÃO (SEM ADF_CLEAN)
         # =========================
-        df_mdls["ADF_CLEAN"] = df_mdls[adf_col].apply(limpar_adf)
-        df_docs["ADF_CLEAN"] = df_docs[adf_docs_col].apply(limpar_adf)
-
         df_docs[grd_col] = df_docs[grd_col].fillna("").astype(str).str.strip()
-
-        # =========================
-        # 🔴 ALERTA CORRETO: ADF NO. VAZIA
-        # =========================
-        df_adf_vazios = df_mdls[
-            df_mdls[adf_col].isna() |
-            (df_mdls[adf_col].astype(str).str.strip() == "")
-        ]
 
         # =========================
         # HISTÓRICO GRD
         # =========================
         df_historico = (
-            df_docs.groupby("ADF_CLEAN")[grd_col]
+            df_docs.groupby(adf_docs_col)[grd_col]
             .apply(lambda x: "\n".join(sorted(set(x.dropna().astype(str)))))
             .reset_index()
-            .rename(columns={grd_col: "HISTORICO_GRD"})
+            .rename(columns={adf_docs_col: adf_col, grd_col: "HISTORICO_GRD"})
         )
 
         # =========================
-        # MERGE
+        # MERGE FINAL
         # =========================
-        df_final = df_mdls.merge(
-            df_historico,
-            on="ADF_CLEAN",
-            how="left"
-        )
+        df_final = df_mdls.merge(df_historico, on=adf_col, how="left")
 
         # =========================
-        # 📛 ALERTA SEM GRD
+        # ALERTAS
         # =========================
-        df_sem_grd = df_final[
-            df_final["HISTORICO_GRD"].isna() |
-            (df_final["HISTORICO_GRD"].astype(str).str.strip() == "")
-        ]
+        df_sem_adf = df_final[df_final[adf_col].isna() | (df_final[adf_col].astype(str).str.strip() == "")]
+        df_sem_grd = df_final[df_final["HISTORICO_GRD"].isna() | (df_final["HISTORICO_GRD"].astype(str).str.strip() == "")]
 
         # =========================
-        # STYLE
+        # STYLE (LINHA VERMELHA SEM ADF)
         # =========================
-        def estilizar_linhas(row):
-            if str(row.get(adf_col, "")).strip() == "":
+        def estilizar(row):
+            if pd.isna(row[adf_col]) or str(row[adf_col]).strip() == "":
                 return ["color: red"] * len(row)
             return [""] * len(row)
 
         # =========================
-        # SIDEBAR - ALERTAS
+        # SIDEBAR ALERTAS
         # =========================
-        st.sidebar.title("🔎 MENU - ALERTAS")
+        st.sidebar.title("🔎 ALERTAS")
 
-        # 🔴 ADF NO. VAZIA (CORRIGIDO)
-        st.sidebar.markdown("### 🔴 ADF NO. sem preenchimento")
+        with st.sidebar.expander(f"🔴 ADF NO. vazia ({len(df_sem_adf)})"):
+            st.dataframe(df_sem_adf, use_container_width=True)
 
-        if not df_adf_vazios.empty:
-            st.sidebar.warning(f"{len(df_adf_vazios)} registros")
-
-            with st.sidebar.expander("Ver linhas sem ADF NO."):
-                st.dataframe(df_adf_vazios, use_container_width=True)
-        else:
-            st.sidebar.success("Sem ADF NO. vazias ✔")
-
-        # 📛 SEM GRD
-        st.sidebar.markdown("### 📛 Sem Histórico GRD")
-
-        if not df_sem_grd.empty:
-            st.sidebar.warning(f"{len(df_sem_grd)} registros")
-
-            with st.sidebar.expander("Ver sem GRD"):
-                st.dataframe(df_sem_grd, use_container_width=True)
-        else:
-            st.sidebar.success("Todos possuem GRD ✔")
-
-        # =========================
-        # MENU PRINCIPAL
-        # =========================
-        st.sidebar.divider()
+        with st.sidebar.expander(f"📛 Sem GRD ({len(df_sem_grd)})"):
+            st.dataframe(df_sem_grd, use_container_width=True)
 
         opcao = st.sidebar.radio(
-            "Navegação:",
+            "Menu:",
             ["Visualizar Tabela", "Buscar", "📊 Dashboard Packages", "📜 Histórico GRD"]
         )
 
         st.sidebar.download_button(
             label="📥 Baixar Excel",
             data=to_excel(df_final),
-            file_name="mdl_vendor_tabela_completa.xlsx",
+            file_name="mdl_vendor_tabela.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
@@ -162,7 +114,7 @@ if arquivo:
             st.subheader("📋 Tabela Completa")
 
             st.dataframe(
-                df_final.style.apply(estilizar_linhas, axis=1),
+                df_final.style.apply(estilizar, axis=1),
                 use_container_width=True,
                 height=700
             )
@@ -176,27 +128,52 @@ if arquivo:
 
             if termo:
 
-                termo = limpar_adf(termo)
-
                 df_filtrado = df_final[
-                    df_final["ADF_CLEAN"].astype(str).str.contains(termo, na=False)
+                    df_final[adf_col].astype(str).str.contains(termo, na=False)
                 ]
 
                 st.dataframe(df_filtrado, use_container_width=True, height=700)
 
         # =========================
-        # DASHBOARD
+        # DASHBOARD PACKAGES (REFEITO)
         # =========================
         elif opcao == "📊 Dashboard Packages":
 
-            package_col = [c for c in df_final.columns if "PACK" in c or "PACKAGE" in c][0]
-
             resumo = df_final.groupby(package_col).agg(
-                TOTAL_ADF=("ADF_CLEAN", "count"),
-                GRD_TOTAL=("HISTORICO_GRD", lambda x: x.notna().sum())
+                TOTAL=("ADF NO." if "ADF NO." in df_final.columns else adf_col, "count"),
+                COM_ADF=(adf_col, lambda x: x.notna().sum()),
+                SEM_ADF=(adf_col, lambda x: x.isna().sum())
             ).reset_index()
 
+            resumo["PENDENTE"] = resumo["SEM_ADF"]
+
+            st.subheader("📊 Resumo por Package")
             st.dataframe(resumo, use_container_width=True)
+
+            # =========================
+            # GRÁFICOS
+            # =========================
+
+            fig1 = px.bar(resumo, x=package_col, y="TOTAL", text_auto=True, title="Total de Registros por Package")
+
+            fig2 = px.bar(
+                resumo,
+                x=package_col,
+                y=["COM_ADF", "SEM_ADF"],
+                title="Entregues vs Pendentes",
+                barmode="stack"
+            )
+
+            fig3 = px.pie(
+                resumo,
+                names=package_col,
+                values="TOTAL",
+                title="Distribuição de Packages"
+            )
+
+            st.plotly_chart(fig1, use_container_width=True)
+            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig3, use_container_width=True)
 
         # =========================
         # HISTÓRICO GRD
@@ -209,10 +186,8 @@ if arquivo:
 
             if adf_sel:
 
-                adf_sel = limpar_adf(adf_sel)
-
                 resultados = df_final[
-                    df_final["ADF_CLEAN"].astype(str).str.contains(adf_sel, na=False)
+                    df_final[adf_col].astype(str).str.contains(adf_sel, na=False)
                 ]
 
                 if not resultados.empty:
@@ -264,7 +239,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 8.2
+        Desenvolvido por Sistema MDL Vendor - Rev. 9.0
     </div>
     """,
     unsafe_allow_html=True
