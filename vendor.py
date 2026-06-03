@@ -21,18 +21,22 @@ def to_excel(df):
 
 
 # =========================
-# EXTRAI REVISÃO GRD
+# FUNÇÃO GRD
 # =========================
 def extrair_revisao(grd):
     if pd.isna(grd):
         return ""
-
     grd = str(grd).strip()
-
     if "_" in grd:
         return grd.split("_")[-1].strip()
-
     return grd
+
+
+# =========================
+# FUNÇÃO: VERIFICAR VAZIO REAL
+# =========================
+def vazio(valor):
+    return pd.isna(valor) or str(valor).strip() == ""
 
 
 # =========================
@@ -42,15 +46,9 @@ if arquivo:
 
     try:
 
-        # =========================
-        # LER ARQUIVO
-        # =========================
         df_mdls = pd.read_excel(arquivo, sheet_name="TODAS MDLS")
         df_docs = pd.read_excel(arquivo, sheet_name="DOCUMENTOS ENVIADOS")
 
-        # =========================
-        # LIMPEZA
-        # =========================
         df_mdls = df_mdls.loc[:, ~df_mdls.columns.astype(str).str.contains("^Unnamed")]
         df_docs = df_docs.loc[:, ~df_docs.columns.astype(str).str.contains("^Unnamed")]
 
@@ -59,21 +57,15 @@ if arquivo:
 
         st.success("Arquivo carregado com sucesso!")
 
-        # =========================
-        # IDENTIFICAR COLUNAS
-        # =========================
         adf_col = [c for c in df_mdls.columns if "ADF" in c.upper()][0]
         adf_docs_col = [c for c in df_docs.columns if "ADF" in c.upper()][0]
         grd_col = [c for c in df_docs.columns if "GRD" in c.upper()][0]
         package_col = [c for c in df_mdls.columns if "PACK" in c.upper() or "PACKAGE" in c.upper()][0]
 
-        # =========================
-        # NORMALIZAÇÃO
-        # =========================
         df_docs[grd_col] = df_docs[grd_col].fillna("").astype(str).str.strip()
 
         # =========================
-        # HISTÓRICO GRD (REVISÕES)
+        # HISTÓRICO GRD
         # =========================
         df_docs["REV_GRD"] = df_docs[grd_col].apply(extrair_revisao)
 
@@ -87,22 +79,20 @@ if arquivo:
             })
         )
 
-        # =========================
-        # MERGE FINAL
-        # =========================
         df_final = df_mdls.merge(df_historico, on=adf_col, how="left")
 
         # =========================
-        # ALERTAS
+        # ALERTAS CORRIGIDOS
         # =========================
-        df_sem_adf = df_final[df_final[adf_col].astype(str).str.strip() == ""]
-        df_sem_grd = df_final[df_final["HISTORICO_GRD"].astype(str).str.strip() == ""]
+        df_sem_adf = df_final[df_final[adf_col].apply(vazio)]
+
+        df_sem_grd = df_final[df_final["HISTORICO_GRD"].apply(vazio)]
 
         # =========================
-        # ESTILO
+        # ESTILO (LINHA VERMELHA CORRETA)
         # =========================
         def estilizar(row):
-            if str(row[adf_col]).strip() == "":
+            if vazio(row[adf_col]):
                 return ["color:red"] * len(row)
             return [""] * len(row)
 
@@ -123,22 +113,18 @@ if arquivo:
         )
 
         st.sidebar.download_button(
-            label="📥 Baixar Excel",
+            "📥 Baixar Excel",
             data=to_excel(df_final),
             file_name="mdl_vendor_tabela.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
         # =========================
-        # VISUALIZAR TABELA
+        # VISUALIZAR
         # =========================
         if opcao == "Visualizar Tabela":
             st.subheader("📋 Tabela Completa")
-            st.dataframe(
-                df_final.style.apply(estilizar, axis=1),
-                use_container_width=True,
-                height=700
-            )
+            st.dataframe(df_final.style.apply(estilizar, axis=1), use_container_width=True, height=700)
 
         # =========================
         # BUSCAR
@@ -146,10 +132,11 @@ if arquivo:
         elif opcao == "Buscar":
             termo = st.text_input("Buscar ADF:")
             if termo:
-                df_filtrado = df_final[
-                    df_final[adf_col].astype(str).str.contains(termo, na=False, case=False)
-                ]
-                st.dataframe(df_filtrado, use_container_width=True, height=700)
+                st.dataframe(
+                    df_final[df_final[adf_col].astype(str).str.contains(termo, na=False, case=False)],
+                    use_container_width=True,
+                    height=700
+                )
 
         # =========================
         # DASHBOARD
@@ -174,7 +161,7 @@ if arquivo:
             st.plotly_chart(fig3, use_container_width=True)
 
         # =========================
-        # HISTÓRICO GRD
+        # HISTÓRICO
         # =========================
         elif opcao == "📜 Histórico GRD":
 
@@ -192,15 +179,17 @@ if arquivo:
                     st.warning("ADF não encontrado")
                 else:
                     for _, row in resultado.iterrows():
+
                         st.markdown(f"### 📌 ADF: {row[adf_col]}")
 
-                        historico = str(row.get("HISTORICO_GRD", ""))
+                        historico = row.get("HISTORICO_GRD", "")
 
-                        if historico.strip() == "":
+                        if vazio(historico):
                             st.warning("Sem GRDs registradas")
                         else:
-                            for r in historico.split("\n"):
-                                st.markdown(f"- Revisão {r}")
+                            for r in str(historico).split("\n"):
+                                if r.strip():
+                                    st.markdown(f"- Revisão {r}")
 
                         st.divider()
 
@@ -234,7 +223,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 9.2
+        Desenvolvido por Bruno Laia - Rev. 9.3
     </div>
     """,
     unsafe_allow_html=True
