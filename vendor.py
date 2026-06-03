@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(page_title="Sistema MDLS", layout="wide")
+st.set_page_config(page_title="Sistema MDL Vendor", layout="wide")
 
-st.title("📊 Sistema MDL Vendor - Desenvolvido por Bruno Laia")
+st.title("📊 Sistema MDL Vendor - CEDOC")
 
 arquivo = st.file_uploader("Envie seu arquivo Excel", type=["xlsx"])
 
@@ -69,18 +69,16 @@ if arquivo:
         )
 
         # =========================
-        # ESTILO FINAL (SEM COLUNAS AUXILIARES)
+        # ESTILO FINAL
         # =========================
         def estilizar(row):
 
             adf_vazio = str(row[adf_col]).strip() == ""
             tem_grd = pd.notna(row[grd_col]) and str(row[grd_col]).strip() != ""
 
-            # ADF vazio → vermelho
             if adf_vazio:
                 return ["color: red"] * len(row)
 
-            # tem GRD → verde claro
             if tem_grd:
                 return ["color: #2ecc71"] * len(row)
 
@@ -125,7 +123,7 @@ if arquivo:
                 st.info("Digite algo para buscar")
 
         # =========================
-        # DASHBOARD (SEM MUDANÇA LÓGICA)
+        # DASHBOARD
         # =========================
         elif opcao == "📊 Dashboard Packages":
 
@@ -161,3 +159,31 @@ if arquivo:
 
 else:
     st.info("Envie o arquivo Excel para iniciar")
+
+# =========================
+# RODAPÉ FIXO
+# =========================
+st.markdown(
+    """
+    <style>
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #0e1117;
+        color: #ffffff;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+        border-top: 1px solid #333;
+        z-index: 999;
+    }
+    </style>
+
+    <div class="footer">
+        Desenvolvido por Bruno Laia
+    </div>
+    """,
+    unsafe_allow_html=True
+)
