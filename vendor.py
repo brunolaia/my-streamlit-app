@@ -93,10 +93,12 @@ if arquivo:
         with st.sidebar.expander(f"📛 Sem GRD ({len(df_sem_grd)})"):
             st.dataframe(df_sem_grd, use_container_width=True)
 
-        # ✅ MENU ALTERADO (Visualizar primeiro)
+        # =========================
+        # MENU
+        # =========================
         opcao = st.sidebar.radio(
             "Menu:",
-            ["Visualizar Tabela", "📊 Dashboard Packages", "Buscar", "📜 Histórico GRD"]
+            ["Visualizar Tabela", "Dashboard Packages", "Buscar", "Histórico GRD"]
         )
 
         st.sidebar.download_button(
@@ -116,7 +118,7 @@ if arquivo:
         # =========================
         # DASHBOARD
         # =========================
-        elif opcao == "📊 Dashboard Packages":
+        elif opcao == "Dashboard Packages":
 
             st.subheader("📊 Dashboard Executivo - Packages")
 
@@ -138,7 +140,6 @@ if arquivo:
             resumo = resumo.sort_values("TOTAL", ascending=False)
             resumo["% ADF"] = (resumo["COM_ADF"] / resumo["TOTAL"].replace(0, 1) * 100).round(1)
 
-            # KPIs
             c1, c2, c3, c4 = st.columns(4)
 
             c1.metric("Packages", len(resumo))
@@ -205,7 +206,10 @@ if arquivo:
         # =========================
         # BUSCAR
         # =========================
-        elif opcao == "🔎 Buscar":
+        elif opcao == "Buscar":
+
+            st.subheader("🔎 Buscar ADF")
+
             termo = st.text_input("Buscar ADF:")
 
             if termo:
@@ -217,7 +221,7 @@ if arquivo:
         # =========================
         # HISTÓRICO GRD
         # =========================
-        elif opcao == "📜 Histórico GRD":
+        elif opcao == "Histórico GRD":
 
             st.subheader("📜 Histórico de Revisões")
 
@@ -277,7 +281,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 9.7
+        Desenvolvido por Bruno Laia - Rev. 9.8
     </div>
     """,
     unsafe_allow_html=True
