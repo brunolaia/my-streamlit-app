@@ -2,12 +2,15 @@ import streamlit as st
 from pathlib import Path
 from urllib.parse import quote
 
-st.set_page_config(page_title="Localizador de Arquivos")
+st.set_page_config(
+    page_title="Localizador de Arquivos",
+    layout="wide"
+)
 
-st.title("🔍 Pesquisa de Arquivos")
+st.title("🔍 Pesquisa de Arquivos ACEDOC")
 
 arquivo_txt = st.file_uploader(
-    "Selecione o banco de dados (.txt)",
+    "Selecione o banco de dados (.txt) Desenvolvido por Bruno Laia",
     type=["txt"]
 )
 
@@ -31,20 +34,38 @@ if arquivo_txt:
             if busca.lower() in nome_arquivo.lower():
                 resultados.append(caminho)
 
-        st.write(f"Encontrados: {len(resultados)} arquivo(s)")
+        st.success(f"Encontrados: {len(resultados)} arquivo(s)")
 
         for caminho in resultados:
-            pasta = str(Path(caminho).parent)
-            nome = Path(caminho).name
+            path_obj = Path(caminho)
 
-            st.markdown(f"**Arquivo:** {nome}")
-            st.code(caminho)
+            # Nome do arquivo (última parte do caminho)
+            nome_arquivo = path_obj.name
 
-            pasta_url = "file:///" + quote(pasta.replace("\\", "/"))
+            # Pasta onde o arquivo está localizado
+            pasta = str(path_obj.parent)
 
-            st.markdown(
-                f'<a href="{pasta_url}" target="_blank">📂 Abrir pasta</a>',
-                unsafe_allow_html=True
+            # Link para abrir a pasta da rede
+            pasta_url = "file:///" + quote(
+                pasta.replace("\\", "/"),
+                safe="/:"
             )
 
-            st.divider()
+            st.markdown(
+                f"""
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    padding:8px;
+                    border-bottom:1px solid #ddd;
+                ">
+                    <span>{nome_arquivo}</span>
+
+                    <a href="{pasta_url}" target="_blank">
+                        📂 Abrir Pasta
+                    </a>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
