@@ -249,7 +249,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Sistema MDL Vendor - Rev. 9.0
+        Desenvolvido por Sistema MDL Vendor - Rev. 9.1
     </div>
     """,
     unsafe_allow_html=True
