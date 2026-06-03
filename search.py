@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Pesquisa de Arquivos A-CEDOC",
+    page_title="Pesquisa de Arquivos A-CEDOC - Rev. 4",
     layout="wide"
 )
 
