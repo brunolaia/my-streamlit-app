@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from io import BytesIO
 
 st.set_page_config(page_title="Sistema MDL Vendor", layout="wide")
 
@@ -42,7 +43,7 @@ if arquivo:
         df_docs[adf_docs_col] = df_docs[adf_docs_col].fillna("").astype(str).str.strip()
 
         # =========================
-        # MERGE (SEM COLUNAS EXTRAS)
+        # MERGE
         # =========================
         df_lookup = df_docs[[adf_docs_col, grd_col]].drop_duplicates()
 
@@ -59,6 +60,15 @@ if arquivo:
         )
 
         # =========================
+        # FUNÇÃO EXPORT EXCEL
+        # =========================
+        def to_excel(df):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False, sheet_name="Tabela Completa")
+            return output.getvalue()
+
+        # =========================
         # MENU
         # =========================
         st.sidebar.title("🔎 MENU")
@@ -69,7 +79,17 @@ if arquivo:
         )
 
         # =========================
-        # ESTILO FINAL
+        # BOTÃO DOWNLOAD EXCEL
+        # =========================
+        st.sidebar.download_button(
+            label="📥 Baixar Tabela em Excel",
+            data=to_excel(df_final),
+            file_name="mdl_vendor_tabela_completa.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        # =========================
+        # ESTILO
         # =========================
         def estilizar(row):
 
