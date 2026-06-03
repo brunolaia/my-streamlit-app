@@ -205,7 +205,7 @@ if arquivo:
         # =========================
         # BUSCAR
         # =========================
-        elif opcao == "Buscar":
+        elif opcao == "🔎 Buscar":
             termo = st.text_input("Buscar ADF:")
 
             if termo:
