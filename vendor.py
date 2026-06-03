@@ -141,10 +141,9 @@ if arquivo:
         # =========================
         # DASHBOARD
         # =========================
-       elif opcao == "📊 Dashboard Packages":
+      elif opcao == "📊 Dashboard Packages":
 
     import plotly.express as px
-    import streamlit as st
 
     # ---------------------------
     # Resumo dos dados
@@ -160,7 +159,10 @@ if arquivo:
         .reset_index()
     )
 
-    resumo["% COM ADF"] = (resumo["COM_ADF"] / resumo["TOTAL"] * 100).round(1)
+    # Evita divisão por zero
+    resumo["% COM ADF"] = (
+        (resumo["COM_ADF"] / resumo["TOTAL"].replace(0, 1)) * 100
+    ).round(1)
 
     resumo = resumo.sort_values("TOTAL", ascending=False)
 
@@ -171,7 +173,11 @@ if arquivo:
     total_registros = resumo["TOTAL"].sum()
     total_com_adf = resumo["COM_ADF"].sum()
     total_sem_adf = resumo["SEM_ADF"].sum()
-    taxa_com_adf = round((total_com_adf / total_registros) * 100, 1) if total_registros else 0
+
+    taxa_com_adf = (
+        round((total_com_adf / total_registros) * 100, 1)
+        if total_registros > 0 else 0
+    )
 
     st.subheader("📊 Dashboard Packages")
 
@@ -251,10 +257,12 @@ if arquivo:
         hole=0.4
     )
 
-    fig3.update_traces(
-        textinfo="percent+label",
-        pull=[0.02] * len(resumo)
-    )
+    # Evita erro se dataframe vazio
+    if not resumo.empty:
+        fig3.update_traces(
+            textinfo="percent+label",
+            pull=[0.02] * len(resumo)
+        )
 
     fig3.update_layout(
         title_x=0.5,
@@ -262,7 +270,7 @@ if arquivo:
     )
 
     # ---------------------------
-    # Exibição em layout melhor
+    # Layout
     # ---------------------------
     colA, colB = st.columns(2)
 
@@ -273,7 +281,6 @@ if arquivo:
         st.plotly_chart(fig2, use_container_width=True)
 
     st.plotly_chart(fig3, use_container_width=True)
-
         # =========================
         # HISTÓRICO
         # =========================
