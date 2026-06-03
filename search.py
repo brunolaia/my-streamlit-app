@@ -1,14 +1,14 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Pesquisa de Arquivos A-CEDOC - Rev. 5",
+    page_title="Pesquisa de Arquivos A-CEDOC - Rev. Final",
     layout="wide"
 )
 
 st.title("🔍 Pesquisa de Arquivos A-CEDOC")
 
 # -------------------------
-# HISTÓRICO DE BUSCAS
+# SESSION STATE
 # -------------------------
 if "historico" not in st.session_state:
     st.session_state.historico = []
@@ -24,9 +24,6 @@ arquivo_txt = st.file_uploader(
     type=["txt"]
 )
 
-# -------------------------
-# PROCESSA ARQUIVO
-# -------------------------
 caminhos = []
 
 if arquivo_txt:
@@ -39,35 +36,50 @@ if arquivo_txt:
     ]
 
     # -------------------------
-    # BUSCA
+    # BUSCA + BOTÕES
     # -------------------------
-    col1, col2 = st.columns([3, 1])
+    col1, col2, col3 = st.columns([3, 1, 1])
 
     with col1:
         busca = st.text_input(
-            "Digite qualquer termo (caminho, pasta, arquivo, etc.)",
+            "Digite qualquer termo (arquivo, pasta, caminho...)",
             value=st.session_state.busca,
-            placeholder="Ex: relatorio, 2024, financeiro..."
+            placeholder="Ex: contrato, 2024, financeiro..."
         )
 
     with col2:
         pesquisar = st.button("🔎 Pesquisar", use_container_width=True)
-        limpar = st.button("🧹 Limpar", use_container_width=True)
+
+    with col3:
+        limpar_busca = st.button("🧹 Limpar busca", use_container_width=True)
+
+    col4, col5 = st.columns([1, 1])
+
+    with col4:
+        limpar_hist = st.button("🗑️ Limpar histórico", use_container_width=True)
 
     # -------------------------
-    # LIMPAR
+    # LIMPAR BUSCA
     # -------------------------
-    if limpar:
+    if limpar_busca:
         st.session_state.busca = ""
         st.rerun()
 
     # -------------------------
-    # PESQUISAR
+    # LIMPAR HISTÓRICO
+    # -------------------------
+    if limpar_hist:
+        st.session_state.historico = []
+        st.rerun()
+
+    # -------------------------
+    # PESQUISA
     # -------------------------
     if pesquisar and busca:
         st.session_state.busca = busca
 
-        st.session_state.historico.append(busca)
+        if busca not in st.session_state.historico:
+            st.session_state.historico.append(busca)
 
         resultados = [
             caminho for caminho in caminhos
@@ -80,52 +92,33 @@ if arquivo_txt:
             st.warning("Nenhum arquivo encontrado.")
 
         # -------------------------
-        # RESULTADOS (CARDS)
+        # RESULTADOS (CARDS DARK)
         # -------------------------
         for caminho in resultados:
 
-            partes = caminho.split("\\")
-            nome_arquivo = partes[-1]
-            pasta = "\\".join(partes[:-1])
-
-            with st.container():
-
-                st.markdown(
-                    f"""
+            st.markdown(
+                f"""
+                <div style="
+                    background: #111318;
+                    border: 1px solid #2a2f3a;
+                    border-radius: 10px;
+                    padding: 14px 16px;
+                    margin-bottom: 10px;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+                ">
                     <div style="
-                        background-color:#f9f9f9;
-                        padding:12px;
-                        border-radius:10px;
-                        border:1px solid #e6e6e6;
-                        margin-bottom:10px;
+                        color: #E6E6E6;
+                        font-size: 14px;
+                        font-family: 'Segoe UI', sans-serif;
+                        word-break: break-all;
+                        line-height: 1.4;
                     ">
-                        <div style="
-                            font-size:15px;
-                            font-weight:700;
-                            margin-bottom:6px;
-                        ">
-                            📄 {nome_arquivo}
-                        </div>
+                        📄 {caminho}
                     </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-                colA, colB = st.columns([4, 1])
-
-                with colA:
-                    st.text_input(
-                        "Caminho completo",
-                        value=caminho,
-                        key=f"full_{hash(caminho)}"
-                    )
-
-                with colB:
-                    st.text_input(
-                        "Pasta",
-                        value=pasta,
-                        key=f"pasta_{hash(caminho)}"
-                    )
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
         # -------------------------
         # HISTÓRICO
@@ -133,14 +126,15 @@ if arquivo_txt:
         if st.session_state.historico:
             st.markdown("### 🕘 Histórico de buscas")
 
-            st.write(
-                " • ".join(
-                    list(dict.fromkeys(st.session_state.historico[::-1]))[:10]
-                )
+            st.markdown(
+                "<div style='color:#aaa; font-size:13px;'>"
+                + " • ".join(st.session_state.historico[::-1][:10]) +
+                "</div>",
+                unsafe_allow_html=True
             )
 
 # -------------------------
-# RODAPÉ
+# FOOTER
 # -------------------------
 st.markdown("---")
 
