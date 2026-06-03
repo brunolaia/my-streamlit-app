@@ -10,7 +10,7 @@ st.set_page_config(
 st.title("🔍 Pesquisa de Arquivos ACEDOC")
 
 arquivo_txt = st.file_uploader(
-    "Selecione o banco de dados (.txt) Desenvolvido por Bruno Laia",
+    "Selecione o banco de dados (.txt) - Rev.1 - Desenvolvido por Bruno Laia",
     type=["txt"]
 )
 
