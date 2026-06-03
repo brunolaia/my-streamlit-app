@@ -141,13 +141,13 @@ if arquivo:
         # =========================
         # DASHBOARD
         # =========================
-      elif opcao == "📊 Dashboard Packages":
+   elif opcao == "📊 Dashboard Packages":
 
     import plotly.express as px
 
-    # ---------------------------
-    # Resumo dos dados
-    # ---------------------------
+    # =========================
+    # RESUMO
+    # =========================
     resumo = (
         df_final
         .groupby(package_col)
@@ -159,17 +159,20 @@ if arquivo:
         .reset_index()
     )
 
-    # Evita divisão por zero
+    if resumo.empty:
+        st.warning("Nenhum dado disponível para exibir.")
+        st.stop()
+
     resumo["% COM ADF"] = (
-        (resumo["COM_ADF"] / resumo["TOTAL"].replace(0, 1)) * 100
+        resumo["COM_ADF"] / resumo["TOTAL"].replace(0, 1) * 100
     ).round(1)
 
     resumo = resumo.sort_values("TOTAL", ascending=False)
 
-    # ---------------------------
+    # =========================
     # KPIs
-    # ---------------------------
-    total_packages = resumo.shape[0]
+    # =========================
+    total_packages = len(resumo)
     total_registros = resumo["TOTAL"].sum()
     total_com_adf = resumo["COM_ADF"].sum()
     total_sem_adf = resumo["SEM_ADF"].sum()
@@ -190,20 +193,16 @@ if arquivo:
 
     st.divider()
 
-    # ---------------------------
-    # Tabela
-    # ---------------------------
+    # =========================
+    # TABELA
+    # =========================
     st.subheader("📋 Resumo por Package")
 
-    st.dataframe(
-        resumo,
-        use_container_width=True,
-        hide_index=True
-    )
+    st.dataframe(resumo, use_container_width=True, hide_index=True)
 
-    # ---------------------------
-    # Gráfico 1 - Total por Package
-    # ---------------------------
+    # =========================
+    # GRÁFICO 1 - TOTAL
+    # =========================
     fig1 = px.bar(
         resumo,
         x=package_col,
@@ -215,23 +214,23 @@ if arquivo:
     )
 
     fig1.update_layout(
-        xaxis_title="Package",
-        yaxis_title="Total",
+        template="plotly_white",
         title_x=0.5,
-        template="plotly_white"
+        xaxis_title="Package",
+        yaxis_title="Total"
     )
 
     fig1.update_traces(textposition="outside")
 
-    # ---------------------------
-    # Gráfico 2 - ADF (stacked)
-    # ---------------------------
+    # =========================
+    # GRÁFICO 2 - ADF
+    # =========================
     fig2 = px.bar(
         resumo,
         x=package_col,
         y=["COM_ADF", "SEM_ADF"],
-        title="Distribuição de ADF por Package",
         barmode="stack",
+        title="Distribuição de ADF por Package",
         color_discrete_map={
             "COM_ADF": "#2ca02c",
             "SEM_ADF": "#d62728"
@@ -239,39 +238,34 @@ if arquivo:
     )
 
     fig2.update_layout(
+        template="plotly_white",
+        title_x=0.5,
         xaxis_title="Package",
         yaxis_title="Quantidade",
-        title_x=0.5,
-        template="plotly_white",
         legend_title="Status ADF"
     )
 
-    # ---------------------------
-    # Gráfico 3 - Participação (%)
-    # ---------------------------
+    # =========================
+    # GRÁFICO 3 - PARTICIPAÇÃO
+    # =========================
     fig3 = px.pie(
         resumo,
         names=package_col,
         values="TOTAL",
-        title="Participação de Packages no Volume Total",
-        hole=0.4
+        hole=0.4,
+        title="Participação de Packages no Volume Total"
     )
 
-    # Evita erro se dataframe vazio
-    if not resumo.empty:
-        fig3.update_traces(
-            textinfo="percent+label",
-            pull=[0.02] * len(resumo)
-        )
+    fig3.update_traces(textinfo="percent+label")
 
     fig3.update_layout(
-        title_x=0.5,
-        template="plotly_white"
+        template="plotly_white",
+        title_x=0.5
     )
 
-    # ---------------------------
-    # Layout
-    # ---------------------------
+    # =========================
+    # LAYOUT FINAL
+    # =========================
     colA, colB = st.columns(2)
 
     with colA:
