@@ -30,6 +30,18 @@ def to_excel(df):
     return output.getvalue()
 
 # =========================
+# STYLE ADF VAZIA (VERMELHO)
+# =========================
+def estilizar_linhas(row):
+
+    adf_vazio = str(row.get(adf_col, "")).strip() == ""
+
+    if adf_vazio:
+        return ["color: red"] * len(row)
+
+    return [""] * len(row)
+
+# =========================
 # APP
 # =========================
 if arquivo:
@@ -53,14 +65,14 @@ if arquivo:
         st.success("Arquivo carregado com sucesso!")
 
         # =========================
-        # DETECTAR COLUNAS
+        # COLUNAS
         # =========================
         adf_col = [c for c in df_mdls.columns if "ADF" in c][0]
         adf_docs_col = [c for c in df_docs.columns if "ADF" in c][0]
         grd_col = [c for c in df_docs.columns if "GRD" in c][0]
 
         # =========================
-        # NORMALIZAR ADF
+        # NORMALIZAR
         # =========================
         df_mdls["ADF_CLEAN"] = df_mdls[adf_col].apply(limpar_adf)
         df_docs["ADF_CLEAN"] = df_docs[adf_docs_col].apply(limpar_adf)
@@ -68,17 +80,13 @@ if arquivo:
         df_docs[grd_col] = df_docs[grd_col].fillna("").astype(str).str.strip()
 
         # =========================
-        # ALERTA ADF VAZIA
+        # ALERTAS BASE
         # =========================
         df_adf_vazios = df_mdls[df_mdls[adf_col].astype(str).str.strip() == ""]
-
-        if not df_adf_vazios.empty:
-            st.warning(f"⚠ Existem {len(df_adf_vazios)} ADFs sem preenchimento!")
-            with st.expander("Ver ADFs vazias"):
-                st.dataframe(df_adf_vazios, use_container_width=True)
+        df_grd_vazios = df_mdls[df_mdls["ADF_CLEAN"].notna()]
 
         # =========================
-        # HISTÓRICO GRD (1 POR LINHA)
+        # HISTÓRICO GRD
         # =========================
         df_historico = (
             df_docs.groupby("ADF_CLEAN")[grd_col]
@@ -88,7 +96,7 @@ if arquivo:
         )
 
         # =========================
-        # MERGE FINAL
+        # MERGE
         # =========================
         df_final = df_mdls.merge(
             df_historico,
@@ -97,18 +105,33 @@ if arquivo:
         )
 
         # =========================
-        # MENU
+        # ALERTA 2: HISTÓRICO VAZIO
         # =========================
-        st.sidebar.title("🔎 MENU")
+        df_sem_grd = df_final[
+            df_final["HISTORICO_GRD"].isna() |
+            (df_final["HISTORICO_GRD"].astype(str).str.strip() == "")
+        ]
+
+        # =========================
+        # MENU (SIDEBAR FEED STYLE)
+        # =========================
+        st.sidebar.title("🔎 MENU - ALERTAS")
+
+        # 🔔 ALERTA ADF VAZIA
+        if not df_adf_vazios.empty:
+            with st.sidebar.expander(f"🚨 ADFs vazias ({len(df_adf_vazios)})"):
+                st.dataframe(df_adf_vazios, use_container_width=True)
+
+        # 🔔 ALERTA SEM GRD
+        if not df_sem_grd.empty:
+            with st.sidebar.expander(f"📛 Sem HISTÓRICO GRD ({len(df_sem_grd)})"):
+                st.dataframe(df_sem_grd, use_container_width=True)
 
         opcao = st.sidebar.radio(
-            "Selecione:",
+            "Navegação:",
             ["Visualizar Tabela", "Buscar", "📊 Dashboard Packages", "📜 Histórico GRD"]
         )
 
-        # =========================
-        # DOWNLOAD EXCEL
-        # =========================
         st.sidebar.download_button(
             label="📥 Baixar Excel",
             data=to_excel(df_final),
@@ -122,7 +145,12 @@ if arquivo:
         if opcao == "Visualizar Tabela":
 
             st.subheader("📋 Tabela Completa")
-            st.dataframe(df_final, use_container_width=True, height=700)
+
+            st.dataframe(
+                df_final.style.apply(estilizar_linhas, axis=1),
+                use_container_width=True,
+                height=700
+            )
 
         # =========================
         # BUSCAR
@@ -141,9 +169,6 @@ if arquivo:
 
                 st.dataframe(df_filtrado, use_container_width=True, height=700)
 
-            else:
-                st.info("Digite uma ADF")
-
         # =========================
         # DASHBOARD
         # =========================
@@ -158,9 +183,6 @@ if arquivo:
 
             st.dataframe(resumo, use_container_width=True)
 
-            st.plotly_chart(px.bar(resumo, x=package_col, y="TOTAL_ADF", title="Total ADF"), use_container_width=True)
-            st.plotly_chart(px.bar(resumo, x=package_col, y="GRD_TOTAL", title="ADF com GRD"), use_container_width=True)
-
         # =========================
         # HISTÓRICO GRD
         # =========================
@@ -168,7 +190,7 @@ if arquivo:
 
             st.subheader("📜 Histórico de GRD por ADF")
 
-            adf_sel = st.text_input("Digite ADF (parcial ou completo):")
+            adf_sel = st.text_input("Digite ADF:")
 
             if adf_sel:
 
@@ -189,10 +211,9 @@ if arquivo:
                         if historico.strip() == "":
                             st.warning("Sem GRDs registradas")
                         else:
-                            grds = [g for g in historico.split("\n") if g.strip()]
-
-                            for g in grds:
-                                st.markdown(f"- {g}")
+                            for g in historico.split("\n"):
+                                if g.strip():
+                                    st.markdown(f"- {g}")
 
                         st.divider()
 
@@ -228,7 +249,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 7
+        Desenvolvido por Bruno Laia - Rev. 8
     </div>
     """,
     unsafe_allow_html=True
