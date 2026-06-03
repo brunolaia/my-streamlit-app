@@ -11,21 +11,17 @@ st.title("📊 Sistema MDL Vendor - CEDOC")
 arquivo = st.file_uploader("Envie seu arquivo Excel", type=["xlsx"])
 
 # =========================
-# FUNÇÃO LIMPAR ADF
+# LIMPAR ADF
 # =========================
 def limpar_adf(adf):
     if pd.isna(adf):
         return ""
-
     adf = str(adf).strip()
-
-    # remove sufixos tipo _A, _B, -A, -1 no final
     adf = re.sub(r"[_-][A-Z0-9]+$", "", adf)
-
     return adf.strip()
 
 # =========================
-# FUNÇÃO EXCEL EXPORT
+# EXPORT EXCEL
 # =========================
 def to_excel(df):
     output = BytesIO()
@@ -33,6 +29,9 @@ def to_excel(df):
         df.to_excel(writer, index=False, sheet_name="Tabela Completa")
     return output.getvalue()
 
+# =========================
+# APP
+# =========================
 if arquivo:
 
     try:
@@ -54,7 +53,7 @@ if arquivo:
         st.success("Arquivo carregado com sucesso!")
 
         # =========================
-        # COLUNAS
+        # DETECTAR COLUNAS
         # =========================
         adf_col = [c for c in df_mdls.columns if "ADF" in c][0]
         adf_docs_col = [c for c in df_docs.columns if "ADF" in c][0]
@@ -69,11 +68,21 @@ if arquivo:
         df_docs[grd_col] = df_docs[grd_col].fillna("").astype(str).str.strip()
 
         # =========================
-        # HISTÓRICO GRD (AGRUPADO)
+        # ALERTA ADF VAZIA
+        # =========================
+        df_adf_vazios = df_mdls[df_mdls[adf_col].astype(str).str.strip() == ""]
+
+        if not df_adf_vazios.empty:
+            st.warning(f"⚠ Existem {len(df_adf_vazios)} ADFs sem preenchimento!")
+            with st.expander("Ver ADFs vazias"):
+                st.dataframe(df_adf_vazios, use_container_width=True)
+
+        # =========================
+        # HISTÓRICO GRD (1 POR LINHA)
         # =========================
         df_historico = (
             df_docs.groupby("ADF_CLEAN")[grd_col]
-            .apply(lambda x: "\n".join(sorted(set([i for i in x if i != ""]))))
+            .apply(lambda x: "\n".join(sorted(set(x.dropna().astype(str)))))
             .reset_index()
             .rename(columns={grd_col: "HISTORICO_GRD"})
         )
@@ -101,20 +110,11 @@ if arquivo:
         # DOWNLOAD EXCEL
         # =========================
         st.sidebar.download_button(
-            label="📥 Baixar Tabela em Excel",
+            label="📥 Baixar Excel",
             data=to_excel(df_final),
             file_name="mdl_vendor_tabela_completa.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
-        # =========================
-        # ESTILO
-        # =========================
-        def estilizar(row):
-            if pd.isna(row.get("HISTORICO_GRD")):
-                return [""] * len(row)
-
-            return [""] * len(row)
 
         # =========================
         # VISUALIZAR
@@ -122,11 +122,10 @@ if arquivo:
         if opcao == "Visualizar Tabela":
 
             st.subheader("📋 Tabela Completa")
-
             st.dataframe(df_final, use_container_width=True, height=700)
 
         # =========================
-        # BUSCAR (AGORA USANDO ADF_CLEAN)
+        # BUSCAR
         # =========================
         elif opcao == "Buscar":
 
@@ -152,9 +151,7 @@ if arquivo:
 
             package_col = [c for c in df_final.columns if "PACK" in c or "PACKAGE" in c][0]
 
-            df_dash = df_final
-
-            resumo = df_dash.groupby(package_col).agg(
+            resumo = df_final.groupby(package_col).agg(
                 TOTAL_ADF=("ADF_CLEAN", "count"),
                 GRD_TOTAL=("HISTORICO_GRD", lambda x: x.notna().sum())
             ).reset_index()
@@ -165,32 +162,42 @@ if arquivo:
             st.plotly_chart(px.bar(resumo, x=package_col, y="GRD_TOTAL", title="ADF com GRD"), use_container_width=True)
 
         # =========================
-        # HISTÓRICO DETALHADO
+        # HISTÓRICO GRD
         # =========================
         elif opcao == "📜 Histórico GRD":
 
             st.subheader("📜 Histórico de GRD por ADF")
 
-            adf_sel = st.text_input("Digite ADF para ver histórico:")
+            adf_sel = st.text_input("Digite ADF (parcial ou completo):")
 
             if adf_sel:
 
                 adf_sel = limpar_adf(adf_sel)
 
-                result = df_final[df_final["ADF_CLEAN"] == adf_sel]
+                resultados = df_final[
+                    df_final["ADF_CLEAN"].astype(str).str.contains(adf_sel, na=False)
+                ]
 
-                if not result.empty:
+                if not resultados.empty:
 
-                    st.write("### ADF encontrada:")
-                    st.write(result[[adf_col, "ADF_CLEAN"]])
+                    for _, row in resultados.iterrows():
 
-                    st.write("### Histórico de GRD:")
-                    st.text(result.iloc[0]["HISTORICO_GRD"])
+                        st.markdown(f"### 📌 ADF: {row[adf_col]}")
+
+                        historico = str(row.get("HISTORICO_GRD", ""))
+
+                        if historico.strip() == "":
+                            st.warning("Sem GRDs registradas")
+                        else:
+                            grds = [g for g in historico.split("\n") if g.strip()]
+
+                            for g in grds:
+                                st.markdown(f"- {g}")
+
+                        st.divider()
+
                 else:
                     st.warning("ADF não encontrada")
-
-            else:
-                st.info("Digite uma ADF para ver o histórico")
 
     except Exception as e:
         st.error("Erro ao processar o arquivo")
@@ -221,7 +228,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 6
+        Desenvolvido por Bruno Laia - Rev. 7
     </div>
     """,
     unsafe_allow_html=True
