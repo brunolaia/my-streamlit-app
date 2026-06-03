@@ -21,20 +21,15 @@ def to_excel(df):
 
 
 # =========================
-# FUNÇÃO GRD
+# FUNÇÕES AUXILIARES
 # =========================
 def extrair_revisao(grd):
     if pd.isna(grd):
         return ""
     grd = str(grd).strip()
-    if "_" in grd:
-        return grd.split("_")[-1].strip()
-    return grd
+    return grd.split("_")[-1] if "_" in grd else grd
 
 
-# =========================
-# FUNÇÃO: VERIFICAR VAZIO REAL
-# =========================
 def vazio(valor):
     return pd.isna(valor) or str(valor).strip() == ""
 
@@ -82,19 +77,10 @@ if arquivo:
         df_final = df_mdls.merge(df_historico, on=adf_col, how="left")
 
         # =========================
-        # ALERTAS CORRIGIDOS
+        # ALERTAS
         # =========================
         df_sem_adf = df_final[df_final[adf_col].apply(vazio)]
-
         df_sem_grd = df_final[df_final["HISTORICO_GRD"].apply(vazio)]
-
-        # =========================
-        # ESTILO (LINHA VERMELHA CORRETA)
-        # =========================
-        def estilizar(row):
-            if vazio(row[adf_col]):
-                return ["color:red"] * len(row)
-            return [""] * len(row)
 
         # =========================
         # SIDEBAR
@@ -109,7 +95,7 @@ if arquivo:
 
         opcao = st.sidebar.radio(
             "Menu:",
-            ["Visualizar Tabela", "Buscar", "📊 Dashboard Packages", "📜 Histórico GRD"]
+            ["📊 Dashboard Packages", "Visualizar Tabela", "Buscar", "📜 Histórico GRD"]
         )
 
         st.sidebar.download_button(
@@ -120,25 +106,121 @@ if arquivo:
         )
 
         # =========================
-        # VISUALIZAR
+        # DASHBOARD
         # =========================
-        if opcao == "Visualizar Tabela":
+        if opcao == "📊 Dashboard Packages":
+
+            st.subheader("📊 Dashboard Executivo - Packages")
+
+            resumo = (
+                df_final
+                .groupby(package_col)
+                .agg(
+                    TOTAL=(adf_col, "count"),
+                    COM_ADF=(adf_col, lambda x: x.notna().sum()),
+                    SEM_ADF=(adf_col, lambda x: x.isna().sum())
+                )
+                .reset_index()
+            )
+
+            if resumo.empty:
+                st.warning("Sem dados para exibir")
+                st.stop()
+
+            resumo = resumo.sort_values("TOTAL", ascending=False)
+            resumo["% ADF"] = (resumo["COM_ADF"] / resumo["TOTAL"].replace(0, 1) * 100).round(1)
+
+            # ================= KPIs =================
+            c1, c2, c3, c4 = st.columns(4)
+
+            c1.metric("Packages", len(resumo))
+            c2.metric("Total Registros", resumo["TOTAL"].sum())
+            c3.metric("Com ADF", resumo["COM_ADF"].sum())
+
+            taxa = (
+                resumo["COM_ADF"].sum() / resumo["TOTAL"].sum() * 100
+                if resumo["TOTAL"].sum() > 0 else 0
+            )
+
+            c4.metric("% Cobertura ADF", f"{taxa:.1f}%")
+
+            st.divider()
+
+            # ================= TABELA =================
+            st.subheader("📋 Ranking de Packages")
+
+            st.dataframe(resumo, use_container_width=True, hide_index=True)
+
+            # ================= GRÁFICO 1 =================
+            fig1 = px.bar(
+                resumo.head(10),
+                x=package_col,
+                y="TOTAL",
+                text="TOTAL",
+                title="Top 10 Packages por Volume",
+                color="TOTAL",
+                color_continuous_scale="Blues"
+            )
+
+            fig1.update_layout(template="plotly_white", title_x=0.5)
+            fig1.update_traces(textposition="outside")
+
+            # ================= GRÁFICO 2 =================
+            fig2 = px.bar(
+                resumo.head(10),
+                x=package_col,
+                y=["COM_ADF", "SEM_ADF"],
+                barmode="stack",
+                title="ADF vs Sem ADF (Top 10)",
+                color_discrete_map={
+                    "COM_ADF": "#2ca02c",
+                    "SEM_ADF": "#d62728"
+                }
+            )
+
+            fig2.update_layout(template="plotly_white", title_x=0.5)
+
+            # ================= GRÁFICO 3 =================
+            fig3 = px.pie(
+                resumo,
+                names=package_col,
+                values="TOTAL",
+                hole=0.4,
+                title="Participação de Packages"
+            )
+
+            fig3.update_traces(textinfo="percent+label")
+
+            fig3.update_layout(template="plotly_white", title_x=0.5)
+
+            colA, colB = st.columns(2)
+
+            with colA:
+                st.plotly_chart(fig1, use_container_width=True)
+
+            with colB:
+                st.plotly_chart(fig2, use_container_width=True)
+
+            st.plotly_chart(fig3, use_container_width=True)
+
+        # =========================
+        # TABELA
+        # =========================
+        elif opcao == "Visualizar Tabela":
             st.subheader("📋 Tabela Completa")
-            st.dataframe(df_final.style.apply(estilizar, axis=1), use_container_width=True, height=700)
+            st.dataframe(df_final, use_container_width=True, height=700)
 
         # =========================
         # BUSCAR
         # =========================
         elif opcao == "Buscar":
             termo = st.text_input("Buscar ADF:")
-            if termo:
-                st.dataframe(
-                    df_final[df_final[adf_col].astype(str).str.contains(termo, na=False, case=False)],
-                    use_container_width=True,
-                    height=700
-                )
 
-        # =========================
+            if termo:
+                resultado = df_final[
+                    df_final[adf_col].astype(str).str.contains(termo, na=False, case=False)
+                ]
+                st.dataframe(resultado, use_container_width=True, height=700)
 
         # =========================
         # HISTÓRICO
@@ -203,7 +285,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 9.5
+        Desenvolvido por Bruno Laia - Rev. 9.6
     </div>
     """,
     unsafe_allow_html=True
