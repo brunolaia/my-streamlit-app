@@ -1,15 +1,14 @@
-import os
 import streamlit as st
 
 st.set_page_config(
-    page_title="Localizador de Arquivos",
+    page_title="Pesquisa de Arquivos A-CEDOC",
     layout="wide"
 )
 
 st.title("🔍 Pesquisa de Arquivos A-CEDOC")
 
 arquivo_txt = st.file_uploader(
-    "Selecione o banco de dados (.txt) - Rev.3 - Desenvolvido por Bruno Laia",
+    "Selecione o banco de dados (.txt)",
     type=["txt"]
 )
 
@@ -42,37 +41,69 @@ if arquivo_txt:
                 resultados.append(caminho)
 
         st.success(
-            f"Encontrados: {len(resultados)} arquivo(s)"
+            f"{len(resultados)} arquivo(s) encontrado(s)"
         )
 
         if not resultados:
-            st.warning("Nenhum arquivo encontrado.")
+            st.warning(
+                "Nenhum arquivo encontrado."
+            )
 
-        for i, caminho in enumerate(resultados):
+        for caminho in resultados:
 
-            caminho = caminho.strip()
-
-            # Nome do arquivo
             nome_arquivo = caminho.split("\\")[-1]
 
-            # Pasta onde está o arquivo
             pasta = caminho.rsplit("\\", 1)[0]
 
-            col1, col2 = st.columns([12, 1])
+            st.markdown(
+                f"""
+                <div style="
+                    padding-top:6px;
+                    padding-bottom:6px;
+                ">
+                    <div style="
+                        font-size:14px;
+                        font-weight:600;
+                        margin-bottom:6px;
+                    ">
+                        📄 {nome_arquivo}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-            with col1:
-                st.markdown(
-                    f"<div style='padding:0;margin:0'>{nome_arquivo}</div>",
-                    unsafe_allow_html=True
-                )
+            st.text_input(
+                "Caminho da pasta",
+                value=pasta,
+                key=f"pasta_{hash(caminho)}",
+                disabled=False
+            )
 
-            with col2:
-                if st.button(
-                    "📂",
-                    key=f"abrir_pasta_{i}",
-                    help="Abrir pasta"
-                ):
-                    try:
-                        os.startfile(pasta)
-                    except Exception as e:
-                        st.error(f"Erro ao abrir pasta: {e}")
+            st.markdown(
+                """
+                <hr style="
+                    margin-top:10px;
+                    margin-bottom:10px;
+                    border:0;
+                    border-top:1px solid #d9d9d9;
+                ">
+                """,
+                unsafe_allow_html=True
+            )
+
+st.markdown("---")
+
+st.markdown(
+    """
+    <div style="
+        text-align:center;
+        color:#808080;
+        font-size:12px;
+        padding-top:10px;
+    ">
+        Desenvolvido por Bruno Laia
+    </div>
+    """,
+    unsafe_allow_html=True
+)
