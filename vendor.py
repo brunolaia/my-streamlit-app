@@ -93,9 +93,10 @@ if arquivo:
         with st.sidebar.expander(f"📛 Sem GRD ({len(df_sem_grd)})"):
             st.dataframe(df_sem_grd, use_container_width=True)
 
+        # ✅ MENU ALTERADO (Visualizar primeiro)
         opcao = st.sidebar.radio(
             "Menu:",
-            ["📊 Dashboard Packages", "Visualizar Tabela", "Buscar", "📜 Histórico GRD"]
+            ["Visualizar Tabela", "📊 Dashboard Packages", "Buscar", "📜 Histórico GRD"]
         )
 
         st.sidebar.download_button(
@@ -106,9 +107,16 @@ if arquivo:
         )
 
         # =========================
+        # VISUALIZAR TABELA
+        # =========================
+        if opcao == "Visualizar Tabela":
+            st.subheader("📋 Tabela Completa")
+            st.dataframe(df_final, use_container_width=True, height=700)
+
+        # =========================
         # DASHBOARD
         # =========================
-        if opcao == "📊 Dashboard Packages":
+        elif opcao == "📊 Dashboard Packages":
 
             st.subheader("📊 Dashboard Executivo - Packages")
 
@@ -130,7 +138,7 @@ if arquivo:
             resumo = resumo.sort_values("TOTAL", ascending=False)
             resumo["% ADF"] = (resumo["COM_ADF"] / resumo["TOTAL"].replace(0, 1) * 100).round(1)
 
-            # ================= KPIs =================
+            # KPIs
             c1, c2, c3, c4 = st.columns(4)
 
             c1.metric("Packages", len(resumo))
@@ -146,12 +154,9 @@ if arquivo:
 
             st.divider()
 
-            # ================= TABELA =================
             st.subheader("📋 Ranking de Packages")
-
             st.dataframe(resumo, use_container_width=True, hide_index=True)
 
-            # ================= GRÁFICO 1 =================
             fig1 = px.bar(
                 resumo.head(10),
                 x=package_col,
@@ -161,11 +166,9 @@ if arquivo:
                 color="TOTAL",
                 color_continuous_scale="Blues"
             )
-
             fig1.update_layout(template="plotly_white", title_x=0.5)
             fig1.update_traces(textposition="outside")
 
-            # ================= GRÁFICO 2 =================
             fig2 = px.bar(
                 resumo.head(10),
                 x=package_col,
@@ -177,10 +180,8 @@ if arquivo:
                     "SEM_ADF": "#d62728"
                 }
             )
-
             fig2.update_layout(template="plotly_white", title_x=0.5)
 
-            # ================= GRÁFICO 3 =================
             fig3 = px.pie(
                 resumo,
                 names=package_col,
@@ -188,9 +189,7 @@ if arquivo:
                 hole=0.4,
                 title="Participação de Packages"
             )
-
             fig3.update_traces(textinfo="percent+label")
-
             fig3.update_layout(template="plotly_white", title_x=0.5)
 
             colA, colB = st.columns(2)
@@ -202,13 +201,6 @@ if arquivo:
                 st.plotly_chart(fig2, use_container_width=True)
 
             st.plotly_chart(fig3, use_container_width=True)
-
-        # =========================
-        # TABELA
-        # =========================
-        elif opcao == "Visualizar Tabela":
-            st.subheader("📋 Tabela Completa")
-            st.dataframe(df_final, use_container_width=True, height=700)
 
         # =========================
         # BUSCAR
@@ -223,7 +215,7 @@ if arquivo:
                 st.dataframe(resultado, use_container_width=True, height=700)
 
         # =========================
-        # HISTÓRICO
+        # HISTÓRICO GRD
         # =========================
         elif opcao == "📜 Histórico GRD":
 
@@ -285,7 +277,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 9.6
+        Desenvolvido por Bruno Laia - Rev. 9.7
     </div>
     """,
     unsafe_allow_html=True
