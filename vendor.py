@@ -176,46 +176,56 @@ if arquivo:
             st.plotly_chart(fig3, use_container_width=True)
 
         # =========================
-        # HISTÓRICO GRD
-        # =========================
-        elif opcao == "📜 Histórico GRD":
+# HISTÓRICO GRD
+# =========================
 
-            st.subheader("📜 Histórico de GRD por ADF")
+def extrair_revisao(grd):
+    """
+    Exemplos:
+    GRD-P2-505-2025_A -> A
+    GRD-P2-505-2025_B -> B
+    GRD-P2-505-2025_C -> C
+    GRD-P2-505-2025-D -> D
+    """
 
-            adf_sel = st.text_input("Digite ADF:")
+    if pd.isna(grd):
+        return ""
 
-            if adf_sel:
+    grd = str(grd).strip()
 
-                resultados = df_final[
-                    df_final[adf_col].astype(str).str.contains(adf_sel, na=False)
-                ]
+    # prioridade para padrão com "_"
+    if "_" in grd:
+        return grd.split("_")[-1].strip()
 
-                if not resultados.empty:
+    # se não existir "_", pega o que vem após o último "-"
+    if "-" in grd:
+        return grd.split("-")[-1].strip()
 
-                    for _, row in resultados.iterrows():
+    return grd
 
-                        st.markdown(f"### 📌 ADF: {row[adf_col]}")
+df_docs["REV_GRD"] = df_docs[grd_col].apply(extrair_revisao)
 
-                        historico = str(row.get("HISTORICO_GRD", ""))
-
-                        if historico.strip() == "":
-                            st.warning("Sem GRDs registradas")
-                        else:
-                            for g in historico.split("\n"):
-                                if g.strip():
-                                    st.markdown(f"- {g}")
-
-                        st.divider()
-
-                else:
-                    st.warning("ADF não encontrada")
-
-    except Exception as e:
-        st.error("Erro ao processar o arquivo")
-        st.exception(e)
-
-else:
-    st.info("Envie o arquivo Excel para iniciar")
+df_historico = (
+    df_docs.groupby(adf_docs_col)["REV_GRD"]
+    .apply(
+        lambda x: "\n".join(
+            sorted(
+                set(
+                    str(v).strip()
+                    for v in x
+                    if str(v).strip()
+                )
+            )
+        )
+    )
+    .reset_index()
+    .rename(
+        columns={
+            adf_docs_col: adf_col,
+            "REV_GRD": "HISTORICO_GRD"
+        }
+    )
+)
 
 # =========================
 # RODAPÉ
