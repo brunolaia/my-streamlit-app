@@ -30,18 +30,6 @@ def to_excel(df):
     return output.getvalue()
 
 # =========================
-# STYLE ADF VAZIA (VERMELHO)
-# =========================
-def estilizar_linhas(row):
-
-    adf_vazio = str(row.get(adf_col, "")).strip() == ""
-
-    if adf_vazio:
-        return ["color: red"] * len(row)
-
-    return [""] * len(row)
-
-# =========================
 # APP
 # =========================
 if arquivo:
@@ -72,7 +60,7 @@ if arquivo:
         grd_col = [c for c in df_docs.columns if "GRD" in c][0]
 
         # =========================
-        # NORMALIZAR
+        # NORMALIZAR ADF
         # =========================
         df_mdls["ADF_CLEAN"] = df_mdls[adf_col].apply(limpar_adf)
         df_docs["ADF_CLEAN"] = df_docs[adf_docs_col].apply(limpar_adf)
@@ -83,10 +71,9 @@ if arquivo:
         # ALERTAS BASE
         # =========================
         df_adf_vazios = df_mdls[df_mdls[adf_col].astype(str).str.strip() == ""]
-        df_grd_vazios = df_mdls[df_mdls["ADF_CLEAN"].notna()]
 
         # =========================
-        # HISTÓRICO GRD
+        # HISTÓRICO GRD (UMA POR LINHA)
         # =========================
         df_historico = (
             df_docs.groupby("ADF_CLEAN")[grd_col]
@@ -96,7 +83,7 @@ if arquivo:
         )
 
         # =========================
-        # MERGE
+        # MERGE FINAL
         # =========================
         df_final = df_mdls.merge(
             df_historico,
@@ -105,7 +92,7 @@ if arquivo:
         )
 
         # =========================
-        # ALERTA 2: HISTÓRICO VAZIO
+        # ALERTA SEM GRD
         # =========================
         df_sem_grd = df_final[
             df_final["HISTORICO_GRD"].isna() |
@@ -113,19 +100,44 @@ if arquivo:
         ]
 
         # =========================
-        # MENU (SIDEBAR FEED STYLE)
+        # STYLE ADF VAZIA (VERMELHO)
+        # =========================
+        def estilizar_linhas(row):
+            if str(row.get(adf_col, "")).strip() == "":
+                return ["color: red"] * len(row)
+            return [""] * len(row)
+
+        # =========================
+        # MENU SIDEBAR (SEPARADO)
         # =========================
         st.sidebar.title("🔎 MENU - ALERTAS")
 
-        # 🔔 ALERTA ADF VAZIA
-        if not df_adf_vazios.empty:
-            with st.sidebar.expander(f"🚨 ADFs vazias ({len(df_adf_vazios)})"):
-                st.dataframe(df_adf_vazios, use_container_width=True)
+        # 🔴 ADF VAZIA
+        st.sidebar.markdown("### 🔴 ADFs sem preenchimento")
 
-        # 🔔 ALERTA SEM GRD
+        if not df_adf_vazios.empty:
+            st.sidebar.warning(f"{len(df_adf_vazios)} registros")
+
+            with st.sidebar.expander("Ver ADFs vazias"):
+                st.dataframe(df_adf_vazios, use_container_width=True)
+        else:
+            st.sidebar.success("Sem ADFs vazias ✔")
+
+        # 📛 SEM GRD
+        st.sidebar.markdown("### 📛 Sem Histórico GRD")
+
         if not df_sem_grd.empty:
-            with st.sidebar.expander(f"📛 Sem HISTÓRICO GRD ({len(df_sem_grd)})"):
+            st.sidebar.warning(f"{len(df_sem_grd)} registros")
+
+            with st.sidebar.expander("Ver sem GRD"):
                 st.dataframe(df_sem_grd, use_container_width=True)
+        else:
+            st.sidebar.success("Todos possuem GRD ✔")
+
+        # =========================
+        # MENU PRINCIPAL
+        # =========================
+        st.sidebar.divider()
 
         opcao = st.sidebar.radio(
             "Navegação:",
@@ -182,6 +194,9 @@ if arquivo:
             ).reset_index()
 
             st.dataframe(resumo, use_container_width=True)
+
+            st.plotly_chart(px.bar(resumo, x=package_col, y="TOTAL_ADF", title="Total ADF"), use_container_width=True)
+            st.plotly_chart(px.bar(resumo, x=package_col, y="GRD_TOTAL", title="ADF com GRD"), use_container_width=True)
 
         # =========================
         # HISTÓRICO GRD
@@ -249,7 +264,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 8
+        Desenvolvido por Bruno Laia - Rev. 8.1
     </div>
     """,
     unsafe_allow_html=True
