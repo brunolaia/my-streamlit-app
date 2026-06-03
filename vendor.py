@@ -21,14 +21,17 @@ def to_excel(df):
 
 
 # =========================
-# FUNÇÃO GRD
+# EXTRAI REVISÃO GRD
 # =========================
 def extrair_revisao(grd):
     if pd.isna(grd):
         return ""
+
     grd = str(grd).strip()
+
     if "_" in grd:
         return grd.split("_")[-1].strip()
+
     return grd
 
 
@@ -40,11 +43,14 @@ if arquivo:
     try:
 
         # =========================
-        # LER ARQUIVO PRINCIPAL
+        # LER ARQUIVO
         # =========================
         df_mdls = pd.read_excel(arquivo, sheet_name="TODAS MDLS")
         df_docs = pd.read_excel(arquivo, sheet_name="DOCUMENTOS ENVIADOS")
 
+        # =========================
+        # LIMPEZA
+        # =========================
         df_mdls = df_mdls.loc[:, ~df_mdls.columns.astype(str).str.contains("^Unnamed")]
         df_docs = df_docs.loc[:, ~df_docs.columns.astype(str).str.contains("^Unnamed")]
 
@@ -54,12 +60,12 @@ if arquivo:
         st.success("Arquivo carregado com sucesso!")
 
         # =========================
-        # COLUNAS
+        # IDENTIFICAR COLUNAS
         # =========================
-        adf_col = next(c for c in df_mdls.columns if "ADF" in c.upper())
-        adf_docs_col = next(c for c in df_docs.columns if "ADF" in c.upper())
-        grd_col = next(c for c in df_docs.columns if "GRD" in c.upper())
-        package_col = next(c for c in df_mdls.columns if "PACK" in c.upper() or "PACKAGE" in c.upper())
+        adf_col = [c for c in df_mdls.columns if "ADF" in c.upper()][0]
+        adf_docs_col = [c for c in df_docs.columns if "ADF" in c.upper()][0]
+        grd_col = [c for c in df_docs.columns if "GRD" in c.upper()][0]
+        package_col = [c for c in df_mdls.columns if "PACK" in c.upper() or "PACKAGE" in c.upper()][0]
 
         # =========================
         # NORMALIZAÇÃO
@@ -67,7 +73,7 @@ if arquivo:
         df_docs[grd_col] = df_docs[grd_col].fillna("").astype(str).str.strip()
 
         # =========================
-        # HISTÓRICO GRD
+        # HISTÓRICO GRD (REVISÕES)
         # =========================
         df_docs["REV_GRD"] = df_docs[grd_col].apply(extrair_revisao)
 
@@ -101,28 +107,7 @@ if arquivo:
             return [""] * len(row)
 
         # =========================
-        # MENU
-        # =========================
-        opcao = st.sidebar.radio(
-            "Menu:",
-            [
-                "Visualizar Tabela",
-                "Buscar",
-                "📊 Dashboard Packages",
-                "📜 Histórico GRD",
-                "📦 Juntar MDL"
-            ]
-        )
-
-        st.sidebar.download_button(
-            "📥 Baixar Excel",
-            data=to_excel(df_final),
-            file_name="mdl_vendor_tabela.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
-        # =========================
-        # ALERTAS SIDEBAR
+        # SIDEBAR
         # =========================
         st.sidebar.title("🔎 ALERTAS")
 
@@ -132,12 +117,28 @@ if arquivo:
         with st.sidebar.expander(f"📛 Sem GRD ({len(df_sem_grd)})"):
             st.dataframe(df_sem_grd, use_container_width=True)
 
+        opcao = st.sidebar.radio(
+            "Menu:",
+            ["Visualizar Tabela", "Buscar", "📊 Dashboard Packages", "📜 Histórico GRD"]
+        )
+
+        st.sidebar.download_button(
+            label="📥 Baixar Excel",
+            data=to_excel(df_final),
+            file_name="mdl_vendor_tabela.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
         # =========================
-        # VISUALIZAR
+        # VISUALIZAR TABELA
         # =========================
         if opcao == "Visualizar Tabela":
             st.subheader("📋 Tabela Completa")
-            st.dataframe(df_final, use_container_width=True, height=700)
+            st.dataframe(
+                df_final.style.apply(estilizar, axis=1),
+                use_container_width=True,
+                height=700
+            )
 
         # =========================
         # BUSCAR
@@ -145,24 +146,32 @@ if arquivo:
         elif opcao == "Buscar":
             termo = st.text_input("Buscar ADF:")
             if termo:
-                st.dataframe(
-                    df_final[df_final[adf_col].astype(str).str.contains(termo, na=False, case=False)],
-                    use_container_width=True,
-                    height=700
-                )
+                df_filtrado = df_final[
+                    df_final[adf_col].astype(str).str.contains(termo, na=False, case=False)
+                ]
+                st.dataframe(df_filtrado, use_container_width=True, height=700)
 
         # =========================
         # DASHBOARD
         # =========================
         elif opcao == "📊 Dashboard Packages":
 
-            resumo = df_final.groupby(package_col).size().reset_index(name="TOTAL")
+            resumo = df_final.groupby(package_col).agg(
+                TOTAL=(adf_col, "count"),
+                COM_ADF=(adf_col, lambda x: x.notna().sum()),
+                SEM_ADF=(adf_col, lambda x: x.isna().sum())
+            ).reset_index()
 
             st.subheader("📊 Resumo por Package")
+            st.dataframe(resumo, use_container_width=True)
 
-            fig = px.bar(resumo, x=package_col, y="TOTAL", text_auto=True)
+            fig1 = px.bar(resumo, x=package_col, y="TOTAL", text_auto=True)
+            fig2 = px.bar(resumo, x=package_col, y=["COM_ADF", "SEM_ADF"], barmode="stack")
+            fig3 = px.pie(resumo, names=package_col, values="TOTAL")
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig1, use_container_width=True)
+            st.plotly_chart(fig2, use_container_width=True)
+            st.plotly_chart(fig3, use_container_width=True)
 
         # =========================
         # HISTÓRICO GRD
@@ -183,67 +192,20 @@ if arquivo:
                     st.warning("ADF não encontrado")
                 else:
                     for _, row in resultado.iterrows():
-                        st.markdown(f"### 📌 {row[adf_col]}")
-                        st.text(row.get("HISTORICO_GRD", ""))
+                        st.markdown(f"### 📌 ADF: {row[adf_col]}")
 
-        # =========================
-        # 📦 JUNTAR MDL (NOVO COMPLETO)
-        # =========================
-        elif opcao == "📦 Juntar MDL":
+                        historico = str(row.get("HISTORICO_GRD", ""))
 
-            st.subheader("📦 Juntar múltiplos arquivos MDL")
+                        if historico.strip() == "":
+                            st.warning("Sem GRDs registradas")
+                        else:
+                            for r in historico.split("\n"):
+                                st.markdown(f"- Revisão {r}")
 
-            arquivos = st.file_uploader(
-                "Envie múltiplos arquivos Excel",
-                type=["xlsx"],
-                accept_multiple_files=True
-            )
-
-            progresso = st.progress(0)
-            status = st.empty()
-
-            if arquivos:
-
-                lista_df = []
-                total = len(arquivos)
-
-                for i, file in enumerate(arquivos):
-
-                    status.write(f"Processando: {file.name}")
-
-                    try:
-                        df_temp = pd.read_excel(file, skiprows=11)
-                        df_temp["ARQUIVO_ORIGEM"] = file.name
-                        lista_df.append(df_temp)
-
-                    except Exception as e:
-                        st.error(f"Erro em {file.name}: {e}")
-
-                    progresso.progress((i + 1) / total)
-
-                if lista_df:
-
-                    df_junto = pd.concat(lista_df, ignore_index=True)
-
-                    st.success("Arquivos unidos com sucesso!")
-                    st.dataframe(df_junto.head(50), use_container_width=True)
-
-                    output = BytesIO()
-                    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                        df_junto.to_excel(writer, index=False, sheet_name="MDL_JUNTO")
-
-                    st.download_button(
-                        "📥 Baixar MDL Unido",
-                        data=output.getvalue(),
-                        file_name="mdl_unido.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
-
-            else:
-                st.info("Envie múltiplos arquivos para iniciar.")
+                        st.divider()
 
     except Exception as e:
-        st.error("Erro ao processar arquivo")
+        st.error("Erro ao processar o arquivo")
         st.exception(e)
 
 else:
@@ -272,7 +234,7 @@ st.markdown(
     </style>
 
     <div class="footer">
-        Desenvolvido por Bruno Laia - Rev. 9.3
+        Desenvolvido por Bruno Laia - Rev. 9.2
     </div>
     """,
     unsafe_allow_html=True
