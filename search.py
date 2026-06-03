@@ -6,10 +6,10 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🔍 Pesquisa de Arquivos")
+st.title("🔍 Pesquisa de Arquivos A-CEDOC")
 
 arquivo_txt = st.file_uploader(
-    "Selecione o banco de dados (.txt)",
+    "Selecione o banco de dados (.txt) - Rev.3 - Desenvolvido por Bruno Laia",
     type=["txt"]
 )
 
