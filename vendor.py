@@ -4,7 +4,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="Sistema MDLS", layout="wide")
 
-st.title("📊 Sistema MDLS - Desenvolvido por Bruno Laia")
+st.title("📊 Sistema MDL Vendor - Desenvolvido por Bruno Laia")
 
 arquivo = st.file_uploader("Envie seu arquivo Excel", type=["xlsx"])
 
