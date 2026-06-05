@@ -196,18 +196,16 @@ st.dataframe(
 # =========================
 st.markdown(
     """
-    
-<style>
-.top-right {
-    position: fixed;
-    top: 10px;
-    right: 200px;
-    font-size: 12px;
-    color: white;
-    z-index: 1000;
-}
-</style>
-
+    <style>
+    .top-right {
+        position: fixed;
+        top: 10px;
+        right: 200px;
+        font-size: 12px;
+        color: white;
+        z-index: 9999;
+    }
+    </style>
 
     <div class="top-right">
         Desenvolvido por Bruno Laia
@@ -215,3 +213,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
