@@ -192,23 +192,23 @@ st.dataframe(
 
 
 # =========================
-# TOPO FIXO (CENTRO - TEXTO BRANCO)
+# TOPO FIXO (DIREITA - TEXTO BRANCO)
 # =========================
 st.markdown(
     """
     <style>
-    .top-center {
+    .top-right {
         position: fixed;
         top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
+        right: 20px;
         font-size: 12px;
         color: white;
         z-index: 1000;
+        text-shadow: 0px 0px 6px black;
     }
     </style>
 
-    <div class="top-center">
+    <div class="top-right">
         Desenvolvido por Bruno Laia
     </div>
     """,
