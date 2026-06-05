@@ -16,7 +16,7 @@ st.title("📊 Dashboard - Engenharia NPO - CEDOC")
 # UPLOAD
 # =========================
 arquivo = st.file_uploader(
-    "📁 Envie sua planilha Excel,
+    "📁 Envie sua planilha Excel",
     type=["xlsx"]
 )
 
