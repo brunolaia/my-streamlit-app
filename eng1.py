@@ -31,6 +31,13 @@ with col_en:
 
 lang = st.session_state.lang
 
+# =========================
+# DEFINIR ABA DO EXCEL
+# =========================
+if lang == "PT":
+    sheet_excel = "Planilha1"
+else:
+    sheet_excel = "Planilha2"
 
 # =========================
 # TEXTOS DINÂMICOS
@@ -95,7 +102,8 @@ with st.spinner(loading_txt):
         time.sleep(0.01)
         progress_bar.progress(i + 1)
 
-    df = pd.read_excel(url, engine="openpyxl")
+    # ✅ AQUI ESTÁ A MUDANÇA PRINCIPAL
+    df = pd.read_excel(url, sheet_name=sheet_excel, engine="openpyxl")
 
     for i in range(40, 100):
         time.sleep(0.005)
@@ -119,6 +127,7 @@ df["Mês"] = df["MesNum"].map(meses)
 
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = "WEEK " + df["SemanaNum"].astype(str) if lang == "EN" else "SEMANA " + df["SemanaNum"].astype(str)
+
 st.success("✅ Dados carregados - Atualização: 05/06/2026")
 
 # =========================
@@ -159,12 +168,8 @@ st.subheader(resumo_txt)
 col1, col2, col3 = st.columns(3)
 
 col1.metric(total_txt, len(df_filtro))
-
-texto_disciplina = disciplina if disciplina not in ["TODAS","ALL"] else ("TODAS" if lang=="PT" else "ALL")
-col2.metric(disciplinas_txt, texto_disciplina)
-
-texto_tipo = tipo_doc if tipo_doc not in ["TODOS","ALL"] else ("TODOS" if lang=="PT" else "ALL")
-col3.metric(tipos_txt, texto_tipo)
+col2.metric(disciplinas_txt, disciplina)
+col3.metric(tipos_txt, tipo_doc)
 
 # =========================
 # GRÁFICOS
