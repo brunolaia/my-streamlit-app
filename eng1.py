@@ -16,7 +16,7 @@ st.title("📊 Dashboard - Engenharia NPO - CEDOC")
 # UPLOAD
 # =========================
 arquivo = st.file_uploader(
-    "📁 Envie sua planilha Excel - Rev.4 - Desenvolvido por Bruno Laia",
+    "📁 Envie sua planilha Excel,
     type=["xlsx"]
 )
 
@@ -188,4 +188,17 @@ st.dataframe(
     df_filtro.sort_values(["Data"]),
     use_container_width=True,
     height=500
+)
+
+# =========================
+# RODAPÉ
+# =========================
+st.markdown(
+    """
+    <hr style="margin-top:30px;margin-bottom:10px">
+    <div style="text-align:center; font-size:12px; color:gray;">
+        Desenvolvido por Bruno Laia
+    </div>
+    """,
+    unsafe_allow_html=True
 )
