@@ -136,109 +136,65 @@ for linha in range(0, len(meses_com_dados), 3):
 
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
-            # =========================
-# AGRUPAMENTO
-# =========================
-semana_df = df_mes.groupby("Semana").agg(
-    Quantidade=("Registro", "count"),
-    Registros=("Registro", lambda x:
-        "<br>• " + "<br>• ".join(x.astype(str))
-    )
-).reset_index()
+            semana_df = df_mes.groupby("Semana").agg(
+                Registros=("Registro", lambda x: "<br>".join(map(str, x)))
+            ).reset_index()
 
-semana_df["SemanaNum"] = pd.to_numeric(
-    semana_df["Semana"].str.extract(r"(\d+)")[0],
-    errors="coerce"
-).fillna(0).astype(int)
+            # ✅ Quantidade correta
+            semana_df["Quantidade"] = semana_df["Registros"].apply(lambda x: len(x.split("<br>")))
 
-semana_df = semana_df.sort_values("SemanaNum")
+            semana_df["SemanaNum"] = pd.to_numeric(
+                semana_df["Semana"].str.extract(r"(\d+)")[0],
+                errors="coerce"
+            ).fillna(0).astype(int)
 
-# =========================
-# SOMA DO MÊS
-# =========================
-total = semana_df["Quantidade"].sum()
+            semana_df = semana_df.sort_values("SemanaNum")
 
-registros_mes = "<br>• " + "<br>• ".join(
-    df_mes["Registro"].astype(str).tolist()
-)
+            # SOMA MÊS
+            total = semana_df["Quantidade"].sum()
 
-total_row = pd.DataFrame({
-    "Semana": ["SOMA MÊS"],
-    "Quantidade": [total],
-    "SemanaNum": [0],
-    "Registros": [registros_mes]
-})
+            total_row = pd.DataFrame({
+                "Semana": ["SOMA MÊS"],
+                "Quantidade": [total],
+                "Registros": ["TOTAL DO MÊS"],
+                "SemanaNum": [0]
+            })
 
-semana_df = pd.concat([total_row, semana_df], ignore_index=True)
+            semana_df = pd.concat([total_row, semana_df], ignore_index=True)
 
-semana_df["Cor"] = semana_df["Semana"].apply(
-    lambda x: "TOTAL" if x == "SOMA MÊS" else "SEMANA"
-)
+            semana_df["Cor"] = semana_df["Semana"].apply(
+                lambda x: "TOTAL" if x == "SOMA MÊS" else "SEMANA"
+            )
 
-# =========================
-# GRÁFICO
-# =========================
-fig = px.bar(
-    semana_df,
-    x="Semana",
-    y="Quantidade",
-    text="Quantidade",
-    color="Cor",
-    custom_data=["Registros"],
-    color_discrete_map={
-        "SEMANA": cores[(linha + idx) % len(cores)],
-        "TOTAL": "#002F6C"
-    }
-)
+            fig = px.bar(
+                semana_df,
+                x="Semana",
+                y="Quantidade",
+                text="Quantidade",
+                color="Cor",
+                color_discrete_map={
+                    "SEMANA": cores[(linha + idx) % len(cores)],
+                    "TOTAL": "#002F6C"
+                }
+            )
 
-# =========================
-# HOVER
-# =========================
-fig.update_traces(
-    textposition="outside",
-    hovertemplate=
-    "<b>%{x}</b><br><br>" +
-    "<b>Quantidade:</b> %{y}<br><br>" +
-    "<b>Registros:</b><br>%{customdata[0]}" +
-    "<extra></extra>"
-)
+            fig.update_traces(
+                customdata=semana_df[["Registros"]],
+                hovertemplate=
+                "<b>%{x}</b><br>" +
+                "Quantidade: %{y}<br><br>" +
+                "%{customdata[0]}" +
+                "<extra></extra>"
+            )
 
-# =========================
-# VISUAL
-# =========================
-fig.update_layout(
-    title={
-        "text": f"📅 {mes}",
-        "x": 0.5
-    },
-    height=350,
-    showlegend=False,
-    hoverlabel=dict(
-        bgcolor="white",
-        font_size=12,
-        font_family="Arial"
-    ),
-    margin=dict(
-        l=10,
-        r=10,
-        t=60,
-        b=20
-    ),
-    xaxis_title="",
-    yaxis_title="Quantidade"
-)
+            fig.update_layout(
+                title={"text": f"📅 {mes}", "x": 0.5},
+                height=320,
+                showlegend=False,
+                hovermode="closest"
+            )
 
-fig.update_yaxes(
-    showgrid=True
-)
-
-st.plotly_chart(
-    fig,
-    use_container_width=True,
-    config={
-        "displayModeBar": False
-    }
-)
+            st.plotly_chart(fig, use_container_width=True)
 
 # =========================
 # TABELA
