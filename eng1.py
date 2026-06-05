@@ -202,7 +202,7 @@ st.markdown(
         top: 10px;
         right: 20px;
         font-size: 12px;
-        color: gray;
+        color: white;
         z-index: 1000;
     }
     </style>
