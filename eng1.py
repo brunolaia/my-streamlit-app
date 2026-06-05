@@ -169,11 +169,14 @@ ano = st.sidebar.selectbox(
 )
 
 # ✅ BOTÃO LIMPAR CORRIGIDO
-if st.sidebar.button(limpar_txt):
-    st.session_state.disciplina = todos_txt
-    st.session_state.tipo_doc = todos_txt
-    st.session_state.ano = todos_txt
-    st.rerun()
+
+if st.sidebar.button(limpar_txt):if st.sidebar.button(lim({
+        "disciplina": todos_txt,
+        "tipo_doc": todos_txt,
+        "ano": todos_txt
+    })
+    st.rerun(
+
 
 # =========================
 # FILTRO
