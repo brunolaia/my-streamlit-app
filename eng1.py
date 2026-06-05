@@ -58,14 +58,55 @@ df["Semana"] = "SEMANA " + df["SemanaNum"].astype(str)
 st.success("✅ Dados carregados com sucesso")
 
 # =========================
+# SESSION STATE (FILTROS)
+# =========================
+if "categoria" not in st.session_state:
+    st.session_state.categoria = "TODAS"
+
+if "ano" not in st.session_state:
+    st.session_state.ano = "TODOS"
+
+if "tipo_doc" not in st.session_state:
+    st.session_state.tipo_doc = "TODOS"
+
+# =========================
 # FILTROS
 # =========================
 st.sidebar.header("Filtros")
 
-categoria = st.sidebar.selectbox("📂 Categoria", ["TODAS"] + sorted(df["Categoria"].dropna().unique()))
-ano = st.sidebar.selectbox("📅 Ano", ["TODOS"] + sorted(df["Ano"].unique()))
-tipo_doc = st.sidebar.selectbox("📄 Tipo de Documento", ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique()))
+categoria = st.sidebar.selectbox(
+    "📂 Categoria",
+    ["TODAS"] + sorted(df["Categoria"].dropna().unique()),
+    index=(["TODAS"] + sorted(df["Categoria"].dropna().unique())).index(st.session_state.categoria)
+)
 
+ano = st.sidebar.selectbox(
+    "📅 Ano",
+    ["TODOS"] + sorted(df["Ano"].unique()),
+    index=(["TODOS"] + sorted(df["Ano"].unique())).index(st.session_state.ano)
+)
+
+tipo_doc = st.sidebar.selectbox(
+    "📄 Tipo de Documento",
+    ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique()),
+    index=(["TODOS"] + sorted(df["TipoDocumento"].dropna().unique())).index(st.session_state.tipo_doc)
+)
+
+# Atualiza estado
+st.session_state.categoria = categoria
+st.session_state.ano = ano
+st.session_state.tipo_doc = tipo_doc
+
+# ✅ BOTÃO LIMPAR FILTROS
+if st.sidebar.button("🔄 Limpar Filtros"):
+    st.session_state.categoria = "TODAS"
+    st.session_state.ano = "TODOS"
+    st.session_state.tipo_doc = "TODOS"
+    st.rerun()
+
+# =========================
+# APLICA FILTROS
+# =========================
 df_filtro = df.copy()
 
 if categoria != "TODAS":
@@ -113,7 +154,6 @@ for linha in range(0, len(meses_com_dados), 3):
                 Registros=("Registro", lambda x: "<br>".join(map(str, x)))
             ).reset_index()
 
-            # ✅ CORREÇÃO DO ERRO (NAO QUEBRA MAIS)
             semana_df["SemanaNum"] = pd.to_numeric(
                 semana_df["Semana"].str.extract(r"(\d+)")[0],
                 errors="coerce"
@@ -121,7 +161,7 @@ for linha in range(0, len(meses_com_dados), 3):
 
             semana_df = semana_df.sort_values("SemanaNum")
 
-            # TOTAL DO MÊS
+            # TOTAL MÊS
             total = semana_df["Quantidade"].sum()
 
             total_row = pd.DataFrame({
@@ -133,7 +173,6 @@ for linha in range(0, len(meses_com_dados), 3):
 
             semana_df = pd.concat([total_row, semana_df], ignore_index=True)
 
-            # COR
             semana_df["Cor"] = semana_df["Semana"].apply(
                 lambda x: "TOTAL" if x=="SOMA MÊS" else "SEMANA"
             )
