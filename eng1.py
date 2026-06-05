@@ -17,25 +17,20 @@ if "lang" not in st.session_state:
 # =========================
 # MENU LATERAL
 # =========================
-st.sidebar.header("MENU")
+st.sidebar.header("📌 MENU")
 
 col_pt, col_en = st.sidebar.columns(2)
 
 with col_pt:
-    col_icon, col_txt = st.columns([1, 3])
-    with col_icon:
-        st.image("https://flagcdn.com/w20/br.png")
-    with col_txt:
-        if st.button("Português"):
-            st.session_state.lang = "PT"
+    if st.button("🇧🇷 Português"):
+        st.session_state.lang = "PT"
 
 with col_en:
-    col_icon, col_txt = st.columns([1, 3])
-    with col_icon:
-        st.image("https://flagcdn.com/w20/sg.png")
-    with col_txt:
-        if st.button("English"):
-            st.session_state.lang = "EN"
+    if st.button("🇸🇬 English"):
+        st.session_state.lang = "EN"
+
+lang = st.session_state.lang
+
 
 # =========================
 # TEXTOS
