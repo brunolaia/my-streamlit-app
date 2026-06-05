@@ -5,10 +5,7 @@ import plotly.express as px
 # =========================
 # CONFIGURAÇÃO DA PÁGINA
 # =========================
-st.set_page_config(
-    page_title="Dashboard Engenharia",
-    layout="wide"
-)
+st.set_page_config(page_title="Dashboard Engenharia", layout="wide")
 
 st.title("📊 Dashboard - Engenharia NPO - CEDOC")
 
@@ -18,7 +15,7 @@ st.markdown(
 )
 
 # =========================
-# LEITURA DIRETA DO GITHUB
+# LEITURA DO GITHUB
 # =========================
 url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
 
@@ -48,17 +45,57 @@ df["Mês"] = df["MesNum"].map(meses)
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = "SEMANA " + df["SemanaNum"].astype(str)
 
-st.success("✅ Dados carregados automaticamente do GitHub")
+st.success("✅ Dados carregados automaticamente - Atualização: 05/06/2026")
+
+# =========================
+# SESSION STATE (FILTROS)
+# =========================
+if "categoria" not in st.session_state:
+    st.session_state.categoria = "TODAS"
+if "ano" not in st.session_state:
+    st.session_state.ano = "TODOS"
+if "tipo_doc" not in st.session_state:
+    st.session_state.tipo_doc = "TODOS"
 
 # =========================
 # FILTROS
 # =========================
 st.sidebar.header("Filtros")
 
-categoria = st.sidebar.selectbox("📂 Categoria", ["TODAS"] + sorted(df["Categoria"].dropna().unique()))
-ano = st.sidebar.selectbox("📅 Ano", ["TODOS"] + sorted(df["Ano"].unique()))
-tipo_doc = st.sidebar.selectbox("📄 Tipo de Documento", ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique()))
+lista_categoria = ["TODAS"] + sorted(df["Categoria"].dropna().unique())
+lista_ano = ["TODOS"] + sorted(df["Ano"].unique())
+lista_tipo = ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique())
 
+categoria = st.sidebar.selectbox(
+    "📂 Categoria", lista_categoria,
+    index=lista_categoria.index(st.session_state.categoria)
+)
+
+ano = st.sidebar.selectbox(
+    "📅 Ano", lista_ano,
+    index=lista_ano.index(st.session_state.ano)
+)
+
+tipo_doc = st.sidebar.selectbox(
+    "📄 Tipo de Documento", lista_tipo,
+    index=lista_tipo.index(st.session_state.tipo_doc)
+)
+
+# Atualiza estado
+st.session_state.categoria = categoria
+st.session_state.ano = ano
+st.session_state.tipo_doc = tipo_doc
+
+# ✅ BOTÃO LIMPAR
+if st.sidebar.button("🔄 Limpar Filtros"):
+    st.session_state.categoria = "TODAS"
+    st.session_state.ano = "TODOS"
+    st.session_state.tipo_doc = "TODOS"
+    st.rerun()
+
+# =========================
+# APLICA FILTROS
+# =========================
 df_filtro = df.copy()
 
 if categoria != "TODAS":
@@ -76,10 +113,9 @@ if tipo_doc != "TODOS":
 st.subheader("📈 Resumo")
 
 col1, col2, col3 = st.columns(3)
-
-col1.metric("Total de Registros", len(df_filtro))
+col1.metric("Total", len(df_filtro))
 col2.metric("Categorias", df_filtro["Categoria"].nunique())
-col3.metric("Tipos de Documento", df_filtro["TipoDocumento"].nunique())
+col3.metric("Tipos", df_filtro["TipoDocumento"].nunique())
 
 # =========================
 # GRÁFICOS
@@ -89,10 +125,7 @@ st.subheader("📊 Registros por Mês e Semana")
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
 
-meses_com_dados = [
-    mes for mes in ordem_meses
-    if not df_filtro[df_filtro["Mês"] == mes].empty
-]
+meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == m].empty]
 
 for linha in range(0, len(meses_com_dados), 3):
 
@@ -104,14 +137,10 @@ for linha in range(0, len(meses_com_dados), 3):
 
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
-            semana_df = (
-                df_mes.groupby("Semana")
-                .agg(
-                    Quantidade=("Registro", "count"),
-                    Registros=("Registro", lambda x: "<br>".join(map(str, x)))
-                )
-                .reset_index()
-            )
+            semana_df = df_mes.groupby("Semana").agg(
+                Quantidade=("Registro", "count"),
+                Registros=("Registro", lambda x: "<br>".join(map(str, x)))
+            ).reset_index()
 
             semana_df["SemanaNum"] = pd.to_numeric(
                 semana_df["Semana"].str.extract(r"(\d+)")[0],
@@ -121,16 +150,16 @@ for linha in range(0, len(meses_com_dados), 3):
             semana_df = semana_df.sort_values("SemanaNum")
 
             # SOMA MÊS
-            total_mes = semana_df["Quantidade"].sum()
+            total = semana_df["Quantidade"].sum()
 
-            linha_total = pd.DataFrame({
+            total_row = pd.DataFrame({
                 "Semana": ["SOMA MÊS"],
-                "Quantidade": [total_mes],
+                "Quantidade": [total],
                 "Registros": ["TOTAL DO MÊS"],
                 "SemanaNum": [0]
             })
 
-            semana_df = pd.concat([linha_total, semana_df], ignore_index=True)
+            semana_df = pd.concat([total_row, semana_df], ignore_index=True)
 
             semana_df["Cor"] = semana_df["Semana"].apply(
                 lambda x: "TOTAL" if x == "SOMA MÊS" else "SEMANA"
@@ -166,11 +195,8 @@ for linha in range(0, len(meses_com_dados), 3):
             st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# DADOS DETALHADOS
+# TABELA
 # =========================
 st.subheader("📋 Dados detalhados")
 
-st.dataframe(
-    df_filtro.sort_values("Data"),
-    use_container_width=True
-)
+st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
