@@ -19,15 +19,34 @@ if "lang" not in st.session_state:
 # =========================
 st.sidebar.header("MENU")
 
-col_pt, col_en = st.sidebar.columns(2)
+# ✅ Captura idioma via URL (hack funcional)
+query_lang = st.query_params.get("lang")
 
-with col_pt:
-    if st.button("🇧🇷 Português"):
-        st.session_state.lang = "PT"
+if query_lang:
+    st.session_state.lang = query_lang
 
-with col_en:
-    if st.button("🇸🇬 English"):
-        st.session_state.lang = "EN"
+# ✅ Botões com imagem dentro (HTML)
+st.sidebar.markdown("""
+<div style="display: flex; gap: 10px;">
+    <a href="?lang=PT" target="_self">
+        <button style="padding:6px 8px; font-size:12px;">
+            <img src="https://flagcdn.com/w20/br.png" style="vertical-align:middle; margin-right:5px;">
+            Português
+        </button>
+    </a>
+
+    <a href="?lang=EN" target="_self">
+        <button style="padding:6px 8px; font-size:12px;">
+            <img src="https://flagcdn.com/w20/sg.png" style="vertical-align:middle; margin-right:5px;">
+            English
+        </button>
+    </a>
+</div>
+""", unsafe_allow_html=True)
+
+# ✅ Define idioma
+if "lang" not in st.session_state:
+    st.session_state.lang = "PT"
 
 lang = st.session_state.lang
 
