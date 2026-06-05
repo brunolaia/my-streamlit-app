@@ -9,7 +9,7 @@ import time
 st.set_page_config(page_title="Dashboard Engenharia", layout="wide")
 
 # =========================
-# CONTROLE DE IDIOMA
+# IDIOMA
 # =========================
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
@@ -18,21 +18,24 @@ if "lang" not in st.session_state:
 # MENU LATERAL
 # =========================
 st.sidebar.header("📌 MENU")
+st.sidebar.markdown("### 🌎 Idioma / Language")
 
 col_pt, col_en = st.sidebar.columns(2)
 
 with col_pt:
-    if st.button("🇧🇷 Português"):
+    st.image("https://flagcdn.com/w40/br.png")
+    if st.button("Português"):
         st.session_state.lang = "PT"
 
 with col_en:
-    if st.button("🇸🇬 English"):
+    st.image("https://flagcdn.com/w40/sg.png")
+    if st.button("English"):
         st.session_state.lang = "EN"
 
 lang = st.session_state.lang
 
 # =========================
-# TEXTOS DINÂMICOS
+# TEXTOS
 # =========================
 if lang == "PT":
     titulo = "📊 Dashboard - Engenharia NPO - CEDOC"
@@ -49,6 +52,8 @@ if lang == "PT":
     grafico_txt = "📊 Registros por Mês e Semana"
     tabela_txt = "📋 Dados detalhados"
     loading_txt = "📥 Carregando base de dados..."
+    todos_txt = "TODOS"
+    todas_txt = "TODAS"
     meses = {
         1: "JANEIRO", 2: "FEVEREIRO", 3: "MARÇO", 4: "ABRIL",
         5: "MAIO", 6: "JUNHO", 7: "JULHO", 8: "AGOSTO",
@@ -69,6 +74,8 @@ else:
     grafico_txt = "📊 Records by Month and Week"
     tabela_txt = "📋 Detailed Data"
     loading_txt = "📥 Loading database..."
+    todos_txt = "ALL"
+    todas_txt = "ALL"
     meses = {
         1: "JANUARY", 2: "FEBRUARY", 3: "MARCH", 4: "APRIL",
         5: "MAY", 6: "JUNE", 7: "JULY", 8: "AUGUST",
@@ -117,16 +124,16 @@ df["Dia"] = df["Data"].dt.day
 df["Mês"] = df["MesNum"].map(meses)
 
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
-df["Semana"] = "WEEK " + df["SemanaNum"].astype(str) if lang == "EN" else "SEMANA " + df["SemanaNum"].astype(str)
+df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
 # =========================
 # FILTROS
 # =========================
 st.sidebar.subheader(filtros_txt)
 
-lista_disciplina = ["TODAS" if lang=="PT" else "ALL"] + sorted(df["Disciplina"].dropna().unique())
-lista_ano = ["TODOS" if lang=="PT" else "ALL"] + sorted(df["Ano"].unique())
-lista_tipo = ["TODOS" if lang=="PT" else "ALL"] + sorted(df["TipoDocumento"].dropna().unique())
+lista_disciplina = [todas_txt] + sorted(df["Disciplina"].dropna().unique())
+lista_ano = [todos_txt] + sorted(df["Ano"].unique())
+lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 
 disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
 ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
@@ -140,13 +147,13 @@ if st.sidebar.button(limpar_txt):
 # =========================
 df_filtro = df.copy()
 
-if disciplina not in ["TODAS","ALL"]:
+if disciplina != todas_txt:
     df_filtro = df_filtro[df_filtro["Disciplina"] == disciplina]
 
-if ano not in ["TODOS","ALL"]:
+if ano != todos_txt:
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
 
-if tipo_doc not in ["TODOS","ALL"]:
+if tipo_doc != todos_txt:
     df_filtro = df_filtro[df_filtro["TipoDocumento"] == tipo_doc]
 
 # =========================
@@ -157,12 +164,8 @@ st.subheader(resumo_txt)
 col1, col2, col3 = st.columns(3)
 
 col1.metric(total_txt, len(df_filtro))
-
-texto_disciplina = disciplina if disciplina not in ["TODAS","ALL"] else ("TODAS" if lang=="PT" else "ALL")
-col2.metric(disciplinas_txt, texto_disciplina)
-
-texto_tipo = tipo_doc if tipo_doc not in ["TODOS","ALL"] else ("TODOS" if lang=="PT" else "ALL")
-col3.metric(tipos_txt, texto_tipo)
+col2.metric(disciplinas_txt, disciplina)
+col3.metric(tipos_txt, tipo_doc)
 
 # =========================
 # GRÁFICOS
