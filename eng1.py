@@ -48,6 +48,7 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+
 # ✅ Define idioma
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
