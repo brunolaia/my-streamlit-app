@@ -137,11 +137,8 @@ for linha in range(0, len(meses_com_dados), 3):
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = df_mes.groupby("Semana").agg(
-                Registros=("Registro", lambda x: "<br>".join(map(str, x)))
+                Quantidade=("Registro", "count")
             ).reset_index()
-
-            # ✅ Quantidade correta
-            semana_df["Quantidade"] = semana_df["Registros"].apply(lambda x: len(x.split("<br>")))
 
             semana_df["SemanaNum"] = pd.to_numeric(
                 semana_df["Semana"].str.extract(r"(\d+)")[0],
@@ -156,7 +153,6 @@ for linha in range(0, len(meses_com_dados), 3):
             total_row = pd.DataFrame({
                 "Semana": ["SOMA MÊS"],
                 "Quantidade": [total],
-                "Registros": ["TOTAL DO MÊS"],
                 "SemanaNum": [0]
             })
 
@@ -178,20 +174,11 @@ for linha in range(0, len(meses_com_dados), 3):
                 }
             )
 
-            fig.update_traces(
-                customdata=semana_df[["Registros"]],
-                hovertemplate=
-                "<b>%{x}</b><br>" +
-                "Quantidade: %{y}<br><br>" +
-                "%{customdata[0]}" +
-                "<extra></extra>"
-            )
-
             fig.update_layout(
                 title={"text": f"📅 {mes}", "x": 0.5},
                 height=320,
                 showlegend=False,
-                hovermode="closest"
+                hovermode=False  # ✅ remove hover
             )
 
             st.plotly_chart(fig, use_container_width=True)
