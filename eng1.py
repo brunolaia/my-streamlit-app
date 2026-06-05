@@ -40,7 +40,7 @@ progress_bar.empty()
 # TRATAMENTO
 # =========================
 df = df.iloc[:, :4]
-df.columns = ["Data", "Categoria", "Registro", "TipoDocumento"]
+df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento"]
 
 df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
 df = df.dropna(subset=["Data"])
@@ -63,10 +63,10 @@ df["Semana"] = "SEMANA " + df["SemanaNum"].astype(str)
 st.success("✅ Dados carregados automaticamente - Atualização: 05/06/2026")
 
 # =========================
-# SESSION STATE (FILTROS)
+# SESSION STATE
 # =========================
-if "categoria" not in st.session_state:
-    st.session_state.categoria = "TODAS"
+if "disciplina" not in st.session_state:
+    st.session_state.disciplina = "TODAS"
 if "ano" not in st.session_state:
     st.session_state.ano = "TODOS"
 if "tipo_doc" not in st.session_state:
@@ -77,13 +77,13 @@ if "tipo_doc" not in st.session_state:
 # =========================
 st.sidebar.header("Filtros")
 
-lista_categoria = ["TODAS"] + sorted(df["Categoria"].dropna().unique())
+lista_disciplina = ["TODAS"] + sorted(df["Disciplina"].dropna().unique())
 lista_ano = ["TODOS"] + sorted(df["Ano"].unique())
 lista_tipo = ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique())
 
-categoria = st.sidebar.selectbox(
-    "📂 Categoria", lista_categoria,
-    index=lista_categoria.index(st.session_state.categoria)
+disciplina = st.sidebar.selectbox(
+    "📂 Disciplina", lista_disciplina,
+    index=lista_disciplina.index(st.session_state.disciplina)
 )
 
 ano = st.sidebar.selectbox(
@@ -96,12 +96,12 @@ tipo_doc = st.sidebar.selectbox(
     index=lista_tipo.index(st.session_state.tipo_doc)
 )
 
-st.session_state.categoria = categoria
+st.session_state.disciplina = disciplina
 st.session_state.ano = ano
 st.session_state.tipo_doc = tipo_doc
 
 if st.sidebar.button("🔄 Limpar Filtros"):
-    st.session_state.categoria = "TODAS"
+    st.session_state.disciplina = "TODAS"
     st.session_state.ano = "TODOS"
     st.session_state.tipo_doc = "TODOS"
     st.rerun()
@@ -111,8 +111,8 @@ if st.sidebar.button("🔄 Limpar Filtros"):
 # =========================
 df_filtro = df.copy()
 
-if categoria != "TODAS":
-    df_filtro = df_filtro[df_filtro["Categoria"] == categoria]
+if disciplina != "TODAS":
+    df_filtro = df_filtro[df_filtro["Disciplina"] == disciplina]
 
 if ano != "TODOS":
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
@@ -121,14 +121,21 @@ if tipo_doc != "TODOS":
     df_filtro = df_filtro[df_filtro["TipoDocumento"] == tipo_doc]
 
 # =========================
-# RESUMO
+# RESUMO DINÂMICO
 # =========================
 st.subheader("📈 Resumo")
 
 col1, col2, col3 = st.columns(3)
+
 col1.metric("Total", len(df_filtro))
-col2.metric("Categorias", df_filtro["Categoria"].nunique())
-col3.metric("Tipos", df_filtro["TipoDocumento"].nunique())
+
+# Disciplina dinâmica
+texto_disciplina = "TODAS" if disciplina == "TODAS" else disciplina
+col2.metric("Disciplinas", texto_disciplina)
+
+# Tipo dinâmico
+texto_tipo = "TODOS" if tipo_doc == "TODOS" else tipo_doc
+col3.metric("Tipos", texto_tipo)
 
 # =========================
 # GRÁFICOS
