@@ -126,17 +126,7 @@ df["Mês"] = df["MesNum"].map(meses)
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
-st.success("✅ Dados carregados com sucesso - Atualização 05/06/2025" if lang == "PT" else "✅ Data loaded successfully - Update 06/05/2025")
-
-# =========================
-# SESSION STATE FILTROS
-# =========================
-if "disciplina" not in st.session_state:
-    st.session_state.disciplina = todos_txt
-if "ano" not in st.session_state:
-    st.session_state.ano = todos_txt
-if "tipo_doc" not in st.session_state:
-    st.session_state.tipo_doc = todos_txt
+st.success("✅ Dados carregados com sucesso" if lang == "PT" else "✅ Data loaded successfully")
 
 # =========================
 # FILTROS
@@ -147,53 +137,38 @@ lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_ano = [todos_txt] + sorted(df["Ano"].unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 
-disciplina = st.sidebar.selectbox(
-    f"📂 {disciplina_txt}",
-    lista_disciplina,
-    index=lista_disciplina.index(st.session_state.disciplina)
-)
+disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
+ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
+tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
 
-ano = st.sidebar.selectbox(
-    f"📅 {ano_txt}",
-    lista_ano,
-    index=lista_ano.index(st.session_state.ano)
-)
-
-tipo_doc = st.sidebar.selectbox(
-    f"📄 {tipo_txt}",
-    lista_tipo,
-    index=lista_tipo.index(st.session_state.tipo_doc)
-)
-
-# Atualiza estado
-st.session_state.disciplina = disciplina
-st.session_state.ano = ano
-st.session_state.tipo_doc = tipo_doc
-
-# ✅ BOTÃO LIMPAR FUNCIONANDO
 if st.sidebar.button(limpar_txt):
-    st.session_state.disciplina = todos_txt
-    st.session_state.ano = todos_txt
-    st.session_state.tipo_doc = todos_txt
     st.rerun()
+
+# =========================
+# FILTRO
+# =========================
+df_filtro = df.copy()
+
+if disciplina != todos_txt:
+    df_filtro = df_filtro[df_filtro["Disciplina"] == disciplina]
+
+if ano != todos_txt:
+    df_filtro = df_filtro[df_filtro["Ano"] == ano]
+
+if tipo_doc != todos_txt:
+    df_filtro = df_filtro[df_filtro["TipoDocumento"] == tipo_doc]
+
 # =========================
 # RESUMO
 # =========================
 st.subheader(resumo_txt)
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3 = st.columns(3)
 
 col1.metric(total_txt, len(df_filtro))
-
 col2.metric(disciplinas_txt, disciplina)
-
 col3.metric(tipos_txt, tipo_doc)
 
-col4.metric(ano_txt, ano)
-
-# ✅ ANO DINÂMICO
-texto_ano = ano if ano != todos_txt else ("TODOS" if lang=="PT" else "ALL")
-col4.metric(ano_txt, texto_ano)
 # =========================
 # GRÁFICOS
 # =========================
