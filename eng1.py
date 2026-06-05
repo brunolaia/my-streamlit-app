@@ -3,12 +3,9 @@ import pandas as pd
 import plotly.express as px
 
 # =========================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIGURAÇÃO
 # =========================
-st.set_page_config(
-    page_title="Dashboard Engenharia",
-    layout="wide"
-)
+st.set_page_config(page_title="Dashboard Engenharia", layout="wide")
 
 st.title("📊 Dashboard - Engenharia NPO - CEDOC")
 
@@ -28,12 +25,11 @@ if arquivo is None:
 # LEITURA
 # =========================
 df = pd.read_excel(arquivo)
-
 df = df.iloc[:, :4]
 df.columns = ["Data", "Categoria", "Registro", "TipoDocumento"]
 
 # =========================
-# TRATAMENTO DE DATAS
+# DATAS
 # =========================
 df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
 df = df.dropna(subset=["Data"])
@@ -46,9 +42,9 @@ df["Dia"] = df["Data"].dt.day
 # MESES
 # =========================
 meses = {
-    1: "JANEIRO", 2: "FEVEREIRO", 3: "MARÇO", 4: "ABRIL",
-    5: "MAIO", 6: "JUNHO", 7: "JULHO", 8: "AGOSTO",
-    9: "SETEMBRO", 10: "OUTUBRO", 11: "NOVEMBRO", 12: "DEZEMBRO"
+    1:"JANEIRO",2:"FEVEREIRO",3:"MARÇO",4:"ABRIL",
+    5:"MAIO",6:"JUNHO",7:"JULHO",8:"AGOSTO",
+    9:"SETEMBRO",10:"OUTUBRO",11:"NOVEMBRO",12:"DEZEMBRO"
 }
 
 df["Mês"] = df["MesNum"].map(meses)
@@ -90,7 +86,7 @@ col1, col2, col3 = st.columns(3)
 
 col1.metric("Total de Registros", len(df_filtro))
 col2.metric("Categorias", df_filtro["Categoria"].nunique())
-col3.metric("Tipos de Documento", df_filtro["TipoDocumento"].nunique())
+col3.metric("Tipos", df_filtro["TipoDocumento"].nunique())
 
 # =========================
 # GRÁFICOS
@@ -100,14 +96,8 @@ st.subheader("📊 Registros por Mês e Semana")
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
 
-meses_com_dados = [
-    mes for mes in ordem_meses
-    if not df_filtro[df_filtro["Mês"] == mes].empty
-]
+meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == m].empty]
 
-# =========================
-# GRÁFICOS EM LINHAS DE 3
-# =========================
 for linha in range(0, len(meses_com_dados), 3):
 
     cols = st.columns(3)
@@ -118,41 +108,31 @@ for linha in range(0, len(meses_com_dados), 3):
 
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
-            # Agrupamento
-            semana_df = (
-                df_mes.groupby("Semana")
-                .agg(
-                    Quantidade=("Registro", "count"),
-                    Registros=("Registro", lambda x: "<br>".join(map(str, x)))
-                )
-                .reset_index()
-            )
+            semana_df = df_mes.groupby("Semana").agg(
+                Quantidade=("Registro","count"),
+                Registros=("Registro", lambda x: "<br>".join(map(str, x)))
+            ).reset_index()
 
-            # Ordenação das semanas
-            semana_df["SemanaNum"] = (
-                semana_df["Semana"].str.extract(r"(\d+)").astype(int)
-            )
+            semana_df["SemanaNum"] = semana_df["Semana"].str.extract(r"(\\d+)").astype(int)
             semana_df = semana_df.sort_values("SemanaNum")
 
-            # ✅ TOTAL DO MÊS
+            # TOTAL
             total_mes = semana_df["Quantidade"].sum()
 
-            linha_total = pd.DataFrame({
-                "Semana": ["SOMA MÊS"],
-                "Quantidade": [total_mes],
-                "Registros": ["TOTAL DO MÊS"],
-                "SemanaNum": [0]
+            total_row = pd.DataFrame({
+                "Semana":["SOMA MÊS"],
+                "Quantidade":[total_mes],
+                "Registros":["TOTAL DO MÊS"],
+                "SemanaNum":[0]
             })
 
-            # Junta TOTAL + semanas
-            semana_df = pd.concat([linha_total, semana_df], ignore_index=True)
+            semana_df = pd.concat([total_row, semana_df], ignore_index=True)
 
-            # Cor diferenciada
+            # COR
             semana_df["Cor"] = semana_df["Semana"].apply(
-                lambda x: "TOTAL" if x == "SOMA MÊS" else "SEMANA"
+                lambda x: "TOTAL" if x=="SOMA MÊS" else "SEMANA"
             )
 
-            # Gráfico
             fig = px.bar(
                 semana_df,
                 x="Semana",
@@ -160,40 +140,31 @@ for linha in range(0, len(meses_com_dados), 3):
                 text="Quantidade",
                 color="Cor",
                 color_discrete_map={
-                    "SEMANA": cores[(linha + idx) % len(cores)],
+                    "SEMANA": cores[(linha+idx)%len(cores)],
                     "TOTAL": "#002F6C"
                 }
             )
 
             fig.update_traces(
-                width=0.35,
                 customdata=semana_df[["Registros"]],
                 hovertemplate=
                 "<b>%{x}</b><br>" +
                 "Quantidade: %{y}<br><br>" +
-                "Registros:<br>%{customdata[0]}" +
+                "%{customdata[0]}" +
                 "<extra></extra>"
             )
 
             fig.update_layout(
-                title={"text": f"📅 {mes}", "x": 0.5},
+                title={"text":f"📅 {mes}","x":0.5},
                 height=320,
-                margin=dict(l=10, r=10, t=50, b=10),
-                showlegend=False,
-                xaxis_title="",
-                yaxis_title="Quantidade",
-                xaxis_tickangle=-45
+                showlegend=False
             )
 
             st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# DADOS DETALHADOS
+# TABELA
 # =========================
 st.subheader("📋 Dados detalhados")
 
-st.dataframe(
-    df_filtro.sort_values(["Data"]),
-    use_container_width=True,
-    height=500
-)
+st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
