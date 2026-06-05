@@ -119,6 +119,7 @@ meses_com_dados = [
     if not df_filtro[df_filtro["Mês"] == mes].empty
 ]
 
+
 # =========================
 # 3 GRÁFICOS POR LINHA
 # =========================
@@ -141,25 +142,47 @@ for linha in range(0, len(meses_com_dados), 3):
                 .reset_index()
             )
 
+            # Ordena semanas
             semana_df["SemanaNum"] = (
                 semana_df["Semana"].str.extract(r"(\d+)").astype(int)
             )
-
             semana_df = semana_df.sort_values("SemanaNum")
 
+            # Calcula TOTAL do mês
+            total_mes = semana_df["Quantidade"].sum()
+
+            # Cria linha TOTAL
+            linha_total = pd.DataFrame({
+                "Semana": ["TOTAL"],
+                "Quantidade": [total_mes],
+                "Registros": ["TOTAL DO MÊS"],
+                "SemanaNum": [0]  # força ficar em primeiro lugar
+            })
+
+            # Junta TOTAL + semanas
+            semana_df_total = pd.concat([linha_total, semana_df], ignore_index=True)
+
+            # Cor diferenciada
+            semana_df_total["Cor"] = semana_df_total["Semana"].apply(
+                lambda x: "TOTAL" if x == "TOTAL" else "SEMANA"
+            )
+
+            # Gráfico
             fig = px.bar(
-                semana_df,
+                semana_df_total,
                 x="Semana",
                 y="Quantidade",
                 text="Quantidade",
-                color_discrete_sequence=[
-                    cores[(linha + idx) % len(cores)]
-                ]
+                color="Cor",
+                color_discrete_map={
+                    "SEMANA": cores[(linha + idx) % len(cores)],
+                    "TOTAL": "#002F6C"  # azul escuro
+                }
             )
 
             fig.update_traces(
                 width=0.35,
-                customdata=semana_df[["Registros"]],
+                customdata=semana_df_total[["Registros"]],
                 hovertemplate=
                 "<b>%{x}</b><br>" +
                 "Quantidade: %{y}<br><br>" +
@@ -178,6 +201,7 @@ for linha in range(0, len(meses_com_dados), 3):
             )
 
             st.plotly_chart(fig, use_container_width=True)
+
 
 # =========================
 # DADOS DETALHADOS
