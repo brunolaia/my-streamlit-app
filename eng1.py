@@ -190,13 +190,24 @@ st.dataframe(
     height=500
 )
 
+
 # =========================
-# RODAPÉ
+# RODAPÉ FIXO (TOPO DIREITA)
 # =========================
 st.markdown(
     """
-    <hr style="margin-top:30px;margin-bottom:10px">
-    <div style="text-align:center; font-size:12px; color:gray;">
+    <style>
+    .footer {
+        position: fixed;
+        top: 10px;
+        right: 20px;
+        font-size: 12px;
+        color: gray;
+        z-index: 1000;
+    }
+    </style>
+
+    <div class="footer">
         Desenvolvido por Bruno Laia
     </div>
     """,
