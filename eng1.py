@@ -119,7 +119,7 @@ df["Mês"] = df["MesNum"].map(meses)
 
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = "WEEK " + df["SemanaNum"].astype(str) if lang == "EN" else "SEMANA " + df["SemanaNum"].astype(str)
-st.success("✅ Dados carregados automaticamente - Atualização: 05/06/2026")
+st.success("✅ Dados carregados - Atualização: 05/06/2026")
 
 # =========================
 # FILTROS
