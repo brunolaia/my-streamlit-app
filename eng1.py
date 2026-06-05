@@ -29,7 +29,6 @@ if arquivo is None:
 # =========================
 df = pd.read_excel(arquivo)
 
-# Agora mantém 4 colunas
 df = df.iloc[:, :4]
 df.columns = ["Data", "Categoria", "Registro", "TipoDocumento"]
 
@@ -67,17 +66,10 @@ st.success("✅ Dados carregados com sucesso")
 # =========================
 st.sidebar.header("Filtros")
 
-categorias = ["TODAS"] + sorted(df["Categoria"].dropna().unique().tolist())
-anos = ["TODOS"] + sorted(df["Ano"].unique().tolist())
-tipos = ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique().tolist())
+categoria = st.sidebar.selectbox("📂 Categoria", ["TODAS"] + sorted(df["Categoria"].dropna().unique()))
+ano = st.sidebar.selectbox("📅 Ano", ["TODOS"] + sorted(df["Ano"].unique()))
+tipo_doc = st.sidebar.selectbox("📄 Tipo de Documento", ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique()))
 
-categoria = st.sidebar.selectbox("📂 Categoria", categorias)
-ano = st.sidebar.selectbox("📅 Ano", anos)
-tipo_doc = st.sidebar.selectbox("📄 Tipo de Documento", tipos)
-
-# =========================
-# APLICA FILTROS
-# =========================
 df_filtro = df.copy()
 
 if categoria != "TODAS":
@@ -96,14 +88,9 @@ st.subheader("📈 Resumo")
 
 col1, col2, col3 = st.columns(3)
 
-with col1:
-    st.metric("Total de Registros", len(df_filtro))
-
-with col2:
-    st.metric("Categorias", df_filtro["Categoria"].nunique())
-
-with col3:
-    st.metric("Tipos de Documento", df_filtro["TipoDocumento"].nunique())
+col1.metric("Total de Registros", len(df_filtro))
+col2.metric("Categorias", df_filtro["Categoria"].nunique())
+col3.metric("Tipos de Documento", df_filtro["TipoDocumento"].nunique())
 
 # =========================
 # GRÁFICOS
@@ -111,7 +98,6 @@ with col3:
 st.subheader("📊 Registros por Mês e Semana")
 
 cores = px.colors.qualitative.Set2
-
 ordem_meses = list(meses.values())
 
 meses_com_dados = [
@@ -120,7 +106,7 @@ meses_com_dados = [
 ]
 
 # =========================
-# 3 GRÁFICOS POR LINHA
+# GRÁFICOS EM LINHAS DE 3
 # =========================
 for linha in range(0, len(meses_com_dados), 3):
 
@@ -132,6 +118,7 @@ for linha in range(0, len(meses_com_dados), 3):
 
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
+            # Agrupamento
             semana_df = (
                 df_mes.groupby("Semana")
                 .agg(
@@ -141,20 +128,41 @@ for linha in range(0, len(meses_com_dados), 3):
                 .reset_index()
             )
 
+            # Ordenação das semanas
             semana_df["SemanaNum"] = (
                 semana_df["Semana"].str.extract(r"(\d+)").astype(int)
             )
-
             semana_df = semana_df.sort_values("SemanaNum")
 
+            # ✅ TOTAL DO MÊS
+            total_mes = semana_df["Quantidade"].sum()
+
+            linha_total = pd.DataFrame({
+                "Semana": ["SOMA MÊS"],
+                "Quantidade": [total_mes],
+                "Registros": ["TOTAL DO MÊS"],
+                "SemanaNum": [0]
+            })
+
+            # Junta TOTAL + semanas
+            semana_df = pd.concat([linha_total, semana_df], ignore_index=True)
+
+            # Cor diferenciada
+            semana_df["Cor"] = semana_df["Semana"].apply(
+                lambda x: "TOTAL" if x == "SOMA MÊS" else "SEMANA"
+            )
+
+            # Gráfico
             fig = px.bar(
                 semana_df,
                 x="Semana",
                 y="Quantidade",
                 text="Quantidade",
-                color_discrete_sequence=[
-                    cores[(linha + idx) % len(cores)]
-                ]
+                color="Cor",
+                color_discrete_map={
+                    "SEMANA": cores[(linha + idx) % len(cores)],
+                    "TOTAL": "#002F6C"
+                }
             )
 
             fig.update_traces(
@@ -189,3 +197,4 @@ st.dataframe(
     use_container_width=True,
     height=500
 )
+``
