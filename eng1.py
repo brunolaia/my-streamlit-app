@@ -163,12 +163,17 @@ if tipo_doc != todos_txt:
 # =========================
 st.subheader(resumo_txt)
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 col1.metric(total_txt, len(df_filtro))
+
 col2.metric(disciplinas_txt, disciplina)
+
 col3.metric(tipos_txt, tipo_doc)
 
+# ✅ ANO DINÂMICO
+texto_ano = ano if ano != todos_txt else ("TODOS" if lang=="PT" else "ALL")
+col4.metric(ano_txt, texto_ano)
 # =========================
 # GRÁFICOS
 # =========================
