@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import time
 
 # =========================
 # CONFIGURAÇÃO DA PÁGINA
@@ -15,11 +16,25 @@ st.markdown(
 )
 
 # =========================
-# LEITURA DO GITHUB
+# LOADING + LEITURA DO GITHUB
 # =========================
 url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
 
-df = pd.read_excel(url, engine="openpyxl")
+progress_bar = st.progress(0)
+
+with st.spinner("📥 Carregando base de dados..."):
+
+    for i in range(40):
+        time.sleep(0.01)
+        progress_bar.progress(i + 1)
+
+    df = pd.read_excel(url, engine="openpyxl")
+
+    for i in range(40, 100):
+        time.sleep(0.005)
+        progress_bar.progress(i + 1)
+
+progress_bar.empty()
 
 # =========================
 # TRATAMENTO
@@ -85,7 +100,6 @@ st.session_state.categoria = categoria
 st.session_state.ano = ano
 st.session_state.tipo_doc = tipo_doc
 
-# BOTÃO LIMPAR
 if st.sidebar.button("🔄 Limpar Filtros"):
     st.session_state.categoria = "TODAS"
     st.session_state.ano = "TODOS"
@@ -93,7 +107,7 @@ if st.sidebar.button("🔄 Limpar Filtros"):
     st.rerun()
 
 # =========================
-# APLICA FILTROS
+# FILTRO
 # =========================
 df_filtro = df.copy()
 
@@ -177,7 +191,7 @@ for linha in range(0, len(meses_com_dados), 3):
                 title={"text": f"📅 {mes}", "x": 0.5},
                 height=320,
                 showlegend=False,
-                hovermode=False  # ✅ REMOVE COMPLETAMENTE O HOVER
+                hovermode=False
             )
 
             st.plotly_chart(fig, use_container_width=True)
