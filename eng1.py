@@ -122,13 +122,14 @@ meses_com_dados = [
 # =========================
 # 3 GRÁFICOS POR LINHA
 # =========================
-for linha in range(0, len(meses_com_dados), 3):
 
-    cols = st.columns(3)
+= st.columns(3)
 
     for idx, mes in enumerate(meses_com_dados[linha:linha+3]):
 
-        with colsdf_mes = df_filtro[df_filtro["Mês"] == mes]
+        with cols[idx]:
+            
+            df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = (
                 df_mes.groupby("Semana")
@@ -138,6 +139,7 @@ for linha in range(0, len(meses_com_dados), 3):
                 )
                 .reset_index()
             )
+
 
             # Ordena semanas
             semana_df["SemanaNum"] = (
