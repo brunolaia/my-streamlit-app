@@ -84,7 +84,7 @@ st.subheader("📈 Resumo")
 
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Total de Registros", len(df_filtro))
+col1.metric("Total", len(df_filtro))
 col2.metric("Categorias", df_filtro["Categoria"].nunique())
 col3.metric("Tipos", df_filtro["TipoDocumento"].nunique())
 
@@ -113,15 +113,20 @@ for linha in range(0, len(meses_com_dados), 3):
                 Registros=("Registro", lambda x: "<br>".join(map(str, x)))
             ).reset_index()
 
-            semana_df["SemanaNum"] = semana_df["Semana"].str.extract(r"(\\d+)").astype(int)
+            # ✅ CORREÇÃO DO ERRO (NAO QUEBRA MAIS)
+            semana_df["SemanaNum"] = pd.to_numeric(
+                semana_df["Semana"].str.extract(r"(\d+)")[0],
+                errors="coerce"
+            ).fillna(0).astype(int)
+
             semana_df = semana_df.sort_values("SemanaNum")
 
-            # TOTAL
-            total_mes = semana_df["Quantidade"].sum()
+            # TOTAL DO MÊS
+            total = semana_df["Quantidade"].sum()
 
             total_row = pd.DataFrame({
                 "Semana":["SOMA MÊS"],
-                "Quantidade":[total_mes],
+                "Quantidade":[total],
                 "Registros":["TOTAL DO MÊS"],
                 "SemanaNum":[0]
             })
@@ -149,7 +154,7 @@ for linha in range(0, len(meses_com_dados), 3):
                 customdata=semana_df[["Registros"]],
                 hovertemplate=
                 "<b>%{x}</b><br>" +
-                "Quantidade: %{y}<br><br>" +
+                "Qtd: %{y}<br><br>" +
                 "%{customdata[0]}" +
                 "<extra></extra>"
             )
@@ -166,5 +171,4 @@ for linha in range(0, len(meses_com_dados), 3):
 # TABELA
 # =========================
 st.subheader("📋 Dados detalhados")
-
 st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
