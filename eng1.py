@@ -170,7 +170,9 @@ ano = st.sidebar.selectbox(
 
 # ✅ BOTÃO LIMPAR CORRIGIDO
 
-if st.sidebar.button(limpar_txt):if st.sidebar.button(lim({
+
+if st.sidebar.button(limpar_txt):
+    st.rerun()
         "disciplina": todos_txt,
         "tipo_doc": todos_txt,
         "ano": todos_txt
