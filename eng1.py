@@ -189,6 +189,8 @@ col2.metric(disciplinas_txt, disciplina)
 
 col3.metric(tipos_txt, tipo_doc)
 
+col4.metric(ano_txt, ano)
+
 # ✅ ANO DINÂMICO
 texto_ano = ano if ano != todos_txt else ("TODOS" if lang=="PT" else "ALL")
 col4.metric(ano_txt, texto_ano)
