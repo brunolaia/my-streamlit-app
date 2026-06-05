@@ -18,21 +18,24 @@ if "lang" not in st.session_state:
 # MENU LATERAL
 # =========================
 st.sidebar.header("📌 MENU")
-st.sidebar.markdown("### 🌎 Idioma / Language")
 
 col_pt, col_en = st.sidebar.columns(2)
 
 with col_pt:
-    st.image("https://flagcdn.com/w40/br.png")
-    if st.button("Português"):
-        st.session_state.lang = "PT"
+    col_icon, col_txt = st.columns([1, 3])
+    with col_icon:
+        st.image("https://flagcdn.com/w20/br.png")
+    with col_txt:
+        if st.button("Português"):
+            st.session_state.lang = "PT"
 
 with col_en:
-    st.image("https://flagcdn.com/w40/sg.png")
-    if st.button("English"):
-        st.session_state.lang = "EN"
-
-lang = st.session_state.lang
+    col_icon, col_txt = st.columns([1, 3])
+    with col_icon:
+        st.image("https://flagcdn.com/w20/sg.png")
+    with col_txt:
+        if st.button("English"):
+            st.session_state.lang = "EN"
 
 # =========================
 # TEXTOS
