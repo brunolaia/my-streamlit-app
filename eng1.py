@@ -192,22 +192,23 @@ st.dataframe(
 
 
 # =========================
-# RODAPÉ FIXO (TOPO DIREITA)
+# TOPO FIXO (CENTRO - TEXTO BRANCO)
 # =========================
 st.markdown(
     """
     <style>
-    .footer {
+    .top-center {
         position: fixed;
         top: 10px;
-        right: 20px;
+        left: 50%;
+        transform: translateX(-50%);
         font-size: 12px;
         color: white;
         z-index: 1000;
     }
     </style>
 
-    <div class="footer">
+    <div class="top-center">
         Desenvolvido por Bruno Laia
     </div>
     """,
