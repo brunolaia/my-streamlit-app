@@ -17,7 +17,7 @@ if "lang" not in st.session_state:
 # =========================
 # MENU LATERAL
 # =========================
-st.sidebar.header("📌 MENU")
+st.sidebar.header("MENU")
 
 col_pt, col_en = st.sidebar.columns(2)
 
