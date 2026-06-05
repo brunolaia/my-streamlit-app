@@ -32,12 +32,9 @@ with col_en:
 lang = st.session_state.lang
 
 # =========================
-# DEFINIR ABA DO EXCEL
+# DEFINIR PLANILHA
 # =========================
-if lang == "PT":
-    sheet_excel = "Planilha1"
-else:
-    sheet_excel = "Planilha2"
+sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 
 # =========================
 # TEXTOS DINÂMICOS
@@ -57,6 +54,7 @@ if lang == "PT":
     grafico_txt = "📊 Registros por Mês e Semana"
     tabela_txt = "📋 Dados detalhados"
     loading_txt = "📥 Carregando base de dados..."
+    todos_txt = "TODOS"
     meses = {
         1: "JANEIRO", 2: "FEVEREIRO", 3: "MARÇO", 4: "ABRIL",
         5: "MAIO", 6: "JUNHO", 7: "JULHO", 8: "AGOSTO",
@@ -77,6 +75,7 @@ else:
     grafico_txt = "📊 Records by Month and Week"
     tabela_txt = "📋 Detailed Data"
     loading_txt = "📥 Loading database..."
+    todos_txt = "ALL"
     meses = {
         1: "JANUARY", 2: "FEBRUARY", 3: "MARCH", 4: "APRIL",
         5: "MAY", 6: "JUNE", 7: "JULY", 8: "AUGUST",
@@ -102,7 +101,6 @@ with st.spinner(loading_txt):
         time.sleep(0.01)
         progress_bar.progress(i + 1)
 
-    # ✅ AQUI ESTÁ A MUDANÇA PRINCIPAL
     df = pd.read_excel(url, sheet_name=sheet_excel, engine="openpyxl")
 
     for i in range(40, 100):
@@ -126,18 +124,18 @@ df["Dia"] = df["Data"].dt.day
 df["Mês"] = df["MesNum"].map(meses)
 
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
-df["Semana"] = "WEEK " + df["SemanaNum"].astype(str) if lang == "EN" else "SEMANA " + df["SemanaNum"].astype(str)
+df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
-st.success("✅ Dados carregados - Atualização: 05/06/2026")
+st.success("✅ Dados carregados com sucesso")
 
 # =========================
 # FILTROS
 # =========================
 st.sidebar.subheader(filtros_txt)
 
-lista_disciplina = ["TODAS" if lang=="PT" else "ALL"] + sorted(df["Disciplina"].dropna().unique())
-lista_ano = ["TODOS" if lang=="PT" else "ALL"] + sorted(df["Ano"].unique())
-lista_tipo = ["TODOS" if lang=="PT" else "ALL"] + sorted(df["TipoDocumento"].dropna().unique())
+lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
+lista_ano = [todos_txt] + sorted(df["Ano"].unique())
+lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 
 disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
 ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
@@ -151,13 +149,13 @@ if st.sidebar.button(limpar_txt):
 # =========================
 df_filtro = df.copy()
 
-if disciplina not in ["TODAS","ALL"]:
+if disciplina != todos_txt:
     df_filtro = df_filtro[df_filtro["Disciplina"] == disciplina]
 
-if ano not in ["TODOS","ALL"]:
+if ano != todos_txt:
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
 
-if tipo_doc not in ["TODOS","ALL"]:
+if tipo_doc != todos_txt:
     df_filtro = df_filtro[df_filtro["TipoDocumento"] == tipo_doc]
 
 # =========================
