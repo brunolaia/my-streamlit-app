@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 
 st.set_page_config(
     page_title="Pesquisa de Arquivos A-CEDOC",
@@ -12,13 +13,11 @@ st.markdown(
     """
     <style>
 
-    /* Fundo geral */
     .stApp {
         background-color: #0e0f13;
         color: #e6e6e6;
     }
 
-    /* Inputs */
     input {
         background-color: #151821 !important;
         color: #e6e6e6 !important;
@@ -26,7 +25,6 @@ st.markdown(
         border: 1px solid #2a2f3a !important;
     }
 
-    /* Botões */
     .stButton>button {
         background-color: #1c2230;
         color: #e6e6e6;
@@ -40,7 +38,6 @@ st.markdown(
         border: 1px solid #3a435a;
     }
 
-    /* Cards de resultado */
     .card {
         background: #151821;
         border: 1px solid #2a2f3a;
@@ -49,6 +46,7 @@ st.markdown(
         margin-bottom: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.35);
         transition: 0.2s;
+        cursor: pointer;
     }
 
     .card:hover {
@@ -63,7 +61,6 @@ st.markdown(
         line-height: 1.4;
     }
 
-    /* Histórico tags */
     .tag {
         display: inline-block;
         background: #1c2230;
@@ -114,6 +111,12 @@ if arquivo_txt:
     ]
 
     # =========================
+    # DATA DE ATUALIZAÇÃO (UPLOAD TIME)
+    # =========================
+    data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M")
+    st.markdown(f"**📅 Atualizado em:** {data_atualizacao}")
+
+    # =========================
     # BUSCA
     # =========================
     col1, col2, col3 = st.columns([3, 1, 1])
@@ -158,13 +161,15 @@ if arquivo_txt:
             st.warning("Nenhum arquivo encontrado.")
 
         # =========================
-        # RESULTADOS (CARDS DARK)
+        # RESULTADOS
         # =========================
-        for caminho in resultados:
+        for i, caminho in enumerate(resultados):
+            nome_arquivo = caminho.split("\\")[-1]
+
             st.markdown(
                 f"""
-                <div class="card">
-                    <div class="file-text">📄 {caminho}</div>
+                <div class="card" title="{caminho}" onclick="navigator.clipboard.writeText('{caminho}')">
+                    <div class="file-text">📄 {nome_arquivo}</div>
                 </div>
                 """,
                 unsafe_allow_html=True
