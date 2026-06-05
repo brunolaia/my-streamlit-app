@@ -4,25 +4,91 @@ import plotly.express as px
 import time
 
 # =========================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIGURAÇÃO
 # =========================
 st.set_page_config(page_title="Dashboard Engenharia", layout="wide")
 
-st.title("📊 Dashboard - Engenharia NPO - CEDOC")
-
-st.markdown(
-    "<p style='color:white; font-size:14px;'>Desenvolvido por Bruno Laia</p>",
-    unsafe_allow_html=True
-)
+# =========================
+# CONTROLE DE IDIOMA
+# =========================
+if "lang" not in st.session_state:
+    st.session_state.lang = "PT"
 
 # =========================
-# LOADING + LEITURA DO GITHUB
+# MENU LATERAL
+# =========================
+st.sidebar.header("📌 MENU")
+
+col_pt, col_en = st.sidebar.columns(2)
+
+with col_pt:
+    if st.button("🇧🇷 Português"):
+        st.session_state.lang = "PT"
+
+with col_en:
+    if st.button("🇸🇬 English"):
+        st.session_state.lang = "EN"
+
+lang = st.session_state.lang
+
+# =========================
+# TEXTOS DINÂMICOS
+# =========================
+if lang == "PT":
+    titulo = "📊 Dashboard - Engenharia NPO - CEDOC"
+    dev = "Desenvolvido por Bruno Laia"
+    filtros_txt = "Filtros"
+    disciplina_txt = "Disciplina"
+    ano_txt = "Ano"
+    tipo_txt = "Tipo de Documento"
+    limpar_txt = "🔄 Limpar Filtros"
+    resumo_txt = "📈 Resumo"
+    total_txt = "Total"
+    disciplinas_txt = "Disciplinas"
+    tipos_txt = "Tipos"
+    grafico_txt = "📊 Registros por Mês e Semana"
+    tabela_txt = "📋 Dados detalhados"
+    loading_txt = "📥 Carregando base de dados..."
+    meses = {
+        1: "JANEIRO", 2: "FEVEREIRO", 3: "MARÇO", 4: "ABRIL",
+        5: "MAIO", 6: "JUNHO", 7: "JULHO", 8: "AGOSTO",
+        9: "SETEMBRO", 10: "OUTUBRO", 11: "NOVEMBRO", 12: "DEZEMBRO"
+    }
+else:
+    titulo = "📊 Dashboard - Engineering NPO - CEDOC"
+    dev = "Developed by Bruno Laia"
+    filtros_txt = "Filters"
+    disciplina_txt = "Discipline"
+    ano_txt = "Year"
+    tipo_txt = "Document Type"
+    limpar_txt = "🔄 Clear Filters"
+    resumo_txt = "📈 Summary"
+    total_txt = "Total"
+    disciplinas_txt = "Disciplines"
+    tipos_txt = "Types"
+    grafico_txt = "📊 Records by Month and Week"
+    tabela_txt = "📋 Detailed Data"
+    loading_txt = "📥 Loading database..."
+    meses = {
+        1: "JANUARY", 2: "FEBRUARY", 3: "MARCH", 4: "APRIL",
+        5: "MAY", 6: "JUNE", 7: "JULY", 8: "AUGUST",
+        9: "SEPTEMBER", 10: "OCTOBER", 11: "NOVEMBER", 12: "DECEMBER"
+    }
+
+# =========================
+# TÍTULO
+# =========================
+st.title(titulo)
+st.markdown(f"<p style='color:white; font-size:14px;'>{dev}</p>", unsafe_allow_html=True)
+
+# =========================
+# LEITURA COM LOADING
 # =========================
 url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
 
 progress_bar = st.progress(0)
 
-with st.spinner("📥 Carregando base de dados..."):
+with st.spinner(loading_txt):
 
     for i in range(40):
         time.sleep(0.01)
@@ -48,62 +114,25 @@ df = df.dropna(subset=["Data"])
 df["Ano"] = df["Data"].dt.year
 df["MesNum"] = df["Data"].dt.month
 df["Dia"] = df["Data"].dt.day
-
-meses = {
-    1: "JANEIRO", 2: "FEVEREIRO", 3: "MARÇO", 4: "ABRIL",
-    5: "MAIO", 6: "JUNHO", 7: "JULHO", 8: "AGOSTO",
-    9: "SETEMBRO", 10: "OUTUBRO", 11: "NOVEMBRO", 12: "DEZEMBRO"
-}
-
 df["Mês"] = df["MesNum"].map(meses)
 
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
-df["Semana"] = "SEMANA " + df["SemanaNum"].astype(str)
-
-st.success("✅ Dados carregados automaticamente - Atualização: 05/06/2026")
-
-# =========================
-# SESSION STATE
-# =========================
-if "disciplina" not in st.session_state:
-    st.session_state.disciplina = "TODAS"
-if "ano" not in st.session_state:
-    st.session_state.ano = "TODOS"
-if "tipo_doc" not in st.session_state:
-    st.session_state.tipo_doc = "TODOS"
+df["Semana"] = "WEEK " + df["SemanaNum"].astype(str) if lang == "EN" else "SEMANA " + df["SemanaNum"].astype(str)
 
 # =========================
 # FILTROS
 # =========================
-st.sidebar.header("Filtros")
+st.sidebar.subheader(filtros_txt)
 
-lista_disciplina = ["TODAS"] + sorted(df["Disciplina"].dropna().unique())
-lista_ano = ["TODOS"] + sorted(df["Ano"].unique())
-lista_tipo = ["TODOS"] + sorted(df["TipoDocumento"].dropna().unique())
+lista_disciplina = ["TODAS" if lang=="PT" else "ALL"] + sorted(df["Disciplina"].dropna().unique())
+lista_ano = ["TODOS" if lang=="PT" else "ALL"] + sorted(df["Ano"].unique())
+lista_tipo = ["TODOS" if lang=="PT" else "ALL"] + sorted(df["TipoDocumento"].dropna().unique())
 
-disciplina = st.sidebar.selectbox(
-    "📂 Disciplina", lista_disciplina,
-    index=lista_disciplina.index(st.session_state.disciplina)
-)
+disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
+ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
+tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
 
-ano = st.sidebar.selectbox(
-    "📅 Ano", lista_ano,
-    index=lista_ano.index(st.session_state.ano)
-)
-
-tipo_doc = st.sidebar.selectbox(
-    "📄 Tipo de Documento", lista_tipo,
-    index=lista_tipo.index(st.session_state.tipo_doc)
-)
-
-st.session_state.disciplina = disciplina
-st.session_state.ano = ano
-st.session_state.tipo_doc = tipo_doc
-
-if st.sidebar.button("🔄 Limpar Filtros"):
-    st.session_state.disciplina = "TODAS"
-    st.session_state.ano = "TODOS"
-    st.session_state.tipo_doc = "TODOS"
+if st.sidebar.button(limpar_txt):
     st.rerun()
 
 # =========================
@@ -111,36 +140,34 @@ if st.sidebar.button("🔄 Limpar Filtros"):
 # =========================
 df_filtro = df.copy()
 
-if disciplina != "TODAS":
+if disciplina not in ["TODAS","ALL"]:
     df_filtro = df_filtro[df_filtro["Disciplina"] == disciplina]
 
-if ano != "TODOS":
+if ano not in ["TODOS","ALL"]:
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
 
-if tipo_doc != "TODOS":
+if tipo_doc not in ["TODOS","ALL"]:
     df_filtro = df_filtro[df_filtro["TipoDocumento"] == tipo_doc]
 
 # =========================
-# RESUMO DINÂMICO
+# RESUMO
 # =========================
-st.subheader("📈 Resumo")
+st.subheader(resumo_txt)
 
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Total", len(df_filtro))
+col1.metric(total_txt, len(df_filtro))
 
-# Disciplina dinâmica
-texto_disciplina = "TODAS" if disciplina == "TODAS" else disciplina
-col2.metric("Disciplinas", texto_disciplina)
+texto_disciplina = disciplina if disciplina not in ["TODAS","ALL"] else ("TODAS" if lang=="PT" else "ALL")
+col2.metric(disciplinas_txt, texto_disciplina)
 
-# Tipo dinâmico
-texto_tipo = "TODOS" if tipo_doc == "TODOS" else tipo_doc
-col3.metric("Tipos", texto_tipo)
+texto_tipo = tipo_doc if tipo_doc not in ["TODOS","ALL"] else ("TODOS" if lang=="PT" else "ALL")
+col3.metric(tipos_txt, texto_tipo)
 
 # =========================
 # GRÁFICOS
 # =========================
-st.subheader("📊 Registros por Mês e Semana")
+st.subheader(grafico_txt)
 
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
@@ -171,7 +198,7 @@ for linha in range(0, len(meses_com_dados), 3):
             total = semana_df["Quantidade"].sum()
 
             total_row = pd.DataFrame({
-                "Semana": ["SOMA MÊS"],
+                "Semana": ["TOTAL"],
                 "Quantidade": [total],
                 "SemanaNum": [0]
             })
@@ -179,7 +206,7 @@ for linha in range(0, len(meses_com_dados), 3):
             semana_df = pd.concat([total_row, semana_df], ignore_index=True)
 
             semana_df["Cor"] = semana_df["Semana"].apply(
-                lambda x: "TOTAL" if x == "SOMA MÊS" else "SEMANA"
+                lambda x: "TOTAL" if x == "TOTAL" else "SEMANA"
             )
 
             fig = px.bar(
@@ -206,6 +233,5 @@ for linha in range(0, len(meses_com_dados), 3):
 # =========================
 # TABELA
 # =========================
-st.subheader("📋 Dados detalhados")
-
+st.subheader(tabela_txt)
 st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
