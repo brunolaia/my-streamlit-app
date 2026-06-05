@@ -134,109 +134,67 @@ for linha in range(0, len(meses_com_dados), 3):
 
         with cols[idx]:
 
-    df_mes = df_filtro[df_filtro["Mês"] == mes]
+            df_mes = df_filtro[df_filtro["Mês"] == mes]
 
-    # =========================
-    # AGRUPA POR SEMANA
-    # =========================
-    semana_df = (
-        df_mes.groupby("Semana")
-        .agg(
-            Quantidade=("Registro", "count"),
-            Registros=("Registro", lambda x:
-                "<br>".join([f"• {r}" for r in x.astype(str)])
+            semana_df = df_mes.groupby("Semana").agg(
+                Registros=("Registro", lambda x: "<br>".join(map(str, x)))
+            ).reset_index()
+
+            # ✅ Quantidade correta
+            semana_df["Quantidade"] = semana_df["Registros"].apply(lambda x: len(x.split("<br>")))
+
+            semana_df["SemanaNum"] = pd.to_numeric(
+                semana_df["Semana"].str.extract(r"(\d+)")[0],
+                errors="coerce"
+            ).fillna(0).astype(int)
+
+            semana_df = semana_df.sort_values("SemanaNum")
+
+            # SOMA MÊS
+            total = semana_df["Quantidade"].sum()
+
+            total_row = pd.DataFrame({
+                "Semana": ["SOMA MÊS"],
+                "Quantidade": [total],
+                "Registros": ["TOTAL DO MÊS"],
+                "SemanaNum": [0]
+            })
+
+            semana_df = pd.concat([total_row, semana_df], ignore_index=True)
+
+            semana_df["Cor"] = semana_df["Semana"].apply(
+                lambda x: "TOTAL" if x == "SOMA MÊS" else "SEMANA"
             )
-        )
-        .reset_index()
-    )
 
-    semana_df["SemanaNum"] = pd.to_numeric(
-        semana_df["Semana"].str.extract(r"(\d+)")[0],
-        errors="coerce"
-    ).fillna(0).astype(int)
-
-    semana_df = semana_df.sort_values("SemanaNum")
-
-    # =========================
-    # LINHA TOTAL DO MÊS
-    # =========================
-    total = semana_df["Quantidade"].sum()
-
-    total_row = pd.DataFrame({
-        "Semana": ["SOMA MÊS"],
-        "Quantidade": [total],
-        "Registros": [
-            "<br>".join(
-                [f"• {r}" for r in df_mes["Registro"].astype(str)]
+            fig = px.bar(
+                semana_df,
+                x="Semana",
+                y="Quantidade",
+                text="Quantidade",
+                color="Cor",
+                color_discrete_map={
+                    "SEMANA": cores[(linha + idx) % len(cores)],
+                    "TOTAL": "#002F6C"
+                }
             )
-        ],
-        "SemanaNum": [0]
-    })
 
-    semana_df = pd.concat(
-        [total_row, semana_df],
-        ignore_index=True
-    )
+            fig.update_traces(
+                customdata=semana_df[["Registros"]],
+                hovertemplate=
+                "<b>%{x}</b><br>" +
+                "Quantidade: %{y}<br><br>" +
+                "%{customdata[0]}" +
+                "<extra></extra>"
+            )
 
-    semana_df["Cor"] = semana_df["Semana"].apply(
-        lambda x: "TOTAL" if x == "SOMA MÊS" else "SEMANA"
-    )
+            fig.update_layout(
+                title={"text": f"📅 {mes}", "x": 0.5},
+                height=320,
+                showlegend=False,
+                hovermode="closest"
+            )
 
-    # =========================
-    # GRÁFICO
-    # =========================
-    fig = px.bar(
-        semana_df,
-        x="Semana",
-        y="Quantidade",
-        text="Quantidade",
-        color="Cor",
-        custom_data=["Registros"],
-        color_discrete_map={
-            "SEMANA": cores[(linha + idx) % len(cores)],
-            "TOTAL": "#002F6C"
-        }
-    )
-
-    fig.update_traces(
-        textposition="outside",
-        hovertemplate=
-        "<b>%{x}</b><br>" +
-        "Quantidade: %{y}<br><br>" +
-        "<b>Registros:</b><br>" +
-        "%{customdata[0]}" +
-        "<extra></extra>"
-    )
-
-    fig.update_layout(
-        title={
-            "text": f"📅 {mes}",
-            "x": 0.5
-        },
-        height=350,
-        showlegend=False,
-        hovermode="closest",
-        hoverlabel=dict(
-            bgcolor="white",
-            font_size=12,
-            font_family="Arial"
-        ),
-        margin=dict(
-            l=10,
-            r=10,
-            t=50,
-            b=10
-        ),
-        xaxis_title="",
-        yaxis_title="Quantidade"
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-        config={"displayModeBar": False}
-    )
-
+            st.plotly_chart(fig, use_container_width=True)
 
 # =========================
 # TABELA
