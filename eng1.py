@@ -16,7 +16,7 @@ st.title("📊 Dashboard - Engenharia NPO - CEDOC")
 # UPLOAD
 # =========================
 arquivo = st.file_uploader(
-    "📁 Envie sua planilha Excel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Desenvolvido por Bruno Laia",
+    "📁 Envie sua planilha Excel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Desenvolvido por Bruno Laia",
     type=["xlsx"]
 )
 
@@ -29,7 +29,6 @@ if arquivo is None:
 # =========================
 df = pd.read_excel(arquivo)
 
-# Agora mantém 4 colunas
 df = df.iloc[:, :4]
 df.columns = ["Data", "Categoria", "Registro", "TipoDocumento"]
 
@@ -111,7 +110,6 @@ with col3:
 st.subheader("📊 Registros por Mês e Semana")
 
 cores = px.colors.qualitative.Set2
-
 ordem_meses = list(meses.values())
 
 meses_com_dados = [
@@ -119,9 +117,8 @@ meses_com_dados = [
     if not df_filtro[df_filtro["Mês"] == mes].empty
 ]
 
-
 # =========================
-# 3 GRÁFICOS POR LINHA
+# GRÁFICOS
 # =========================
 for linha in range(0, len(meses_com_dados), 3):
 
@@ -142,32 +139,26 @@ for linha in range(0, len(meses_com_dados), 3):
                 .reset_index()
             )
 
-            # Ordena semanas
             semana_df["SemanaNum"] = (
                 semana_df["Semana"].str.extract(r"(\d+)").astype(int)
             )
             semana_df = semana_df.sort_values("SemanaNum")
 
-            # Calcula TOTAL do mês
             total_mes = semana_df["Quantidade"].sum()
 
-            # Cria linha TOTAL
             linha_total = pd.DataFrame({
                 "Semana": ["TOTAL"],
                 "Quantidade": [total_mes],
                 "Registros": ["TOTAL DO MÊS"],
-                "SemanaNum": [0]  # força ficar em primeiro lugar
+                "SemanaNum": [0]
             })
 
-            # Junta TOTAL + semanas
             semana_df_total = pd.concat([linha_total, semana_df], ignore_index=True)
 
-            # Cor diferenciada
             semana_df_total["Cor"] = semana_df_total["Semana"].apply(
                 lambda x: "TOTAL" if x == "TOTAL" else "SEMANA"
             )
 
-            # Gráfico
             fig = px.bar(
                 semana_df_total,
                 x="Semana",
@@ -176,7 +167,7 @@ for linha in range(0, len(meses_com_dados), 3):
                 color="Cor",
                 color_discrete_map={
                     "SEMANA": cores[(linha + idx) % len(cores)],
-                    "TOTAL": "#002F6C"  # azul escuro
+                    "TOTAL": "#002F6C"
                 }
             )
 
@@ -202,6 +193,14 @@ for linha in range(0, len(meses_com_dados), 3):
 
             st.plotly_chart(fig, use_container_width=True)
 
+            # ✅ REGISTROS EXPANDÍVEIS (CLIQUE)
+            st.markdown("### 🔎 Registros")
+
+            for _, row in semana_df_total.iterrows():
+                if row["Semana"] != "TOTAL":
+                    with st.expander(f"{mes} - {row['Semana']} ({row['Quantidade']})"):
+                        registros = row["Registros"].split("<br>")
+                        st.write(registros)
 
 # =========================
 # DADOS DETALHADOS
@@ -214,9 +213,8 @@ st.dataframe(
     height=500
 )
 
-
 # =========================
-# TOPO FIXO (DIREITA - TEXTO BRANCO)
+# TOPO FIXO
 # =========================
 st.markdown(
     """
@@ -228,6 +226,7 @@ st.markdown(
         font-size: 12px;
         color: white;
         z-index: 9999;
+        text-shadow: 0px 0px 6px black;
     }
     </style>
 
@@ -237,4 +236,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
