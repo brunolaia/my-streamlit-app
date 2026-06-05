@@ -83,6 +83,16 @@ else:
     }
 
 # =========================
+# SESSION STATE DOS FILTROS ✅
+# =========================
+if "disciplina" not in st.session_state:
+    st.session_state.disciplina = todos_txt
+if "tipo_doc" not in st.session_state:
+    st.session_state.tipo_doc = todos_txt
+if "ano" not in st.session_state:
+    st.session_state.ano = todos_txt
+
+# =========================
 # TÍTULO
 # =========================
 st.title(titulo)
@@ -129,7 +139,7 @@ df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(s
 st.success("✅ Dados carregados com sucesso - Atualizado em 05/06/2026" if lang == "PT" else "✅ Data loaded successfully - Updated on 06/05/2026")
 
 # =========================
-# FILTROS (ORDEM ALTERADA ✅)
+# FILTROS
 # =========================
 st.sidebar.subheader(filtros_txt)
 
@@ -137,11 +147,32 @@ lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 lista_ano = [todos_txt] + sorted(df["Ano"].unique())
 
-disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
-tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
-ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
+disciplina = st.sidebar.selectbox(
+    f"📂 {disciplina_txt}",
+    lista_disciplina,
+    index=lista_disciplina.index(st.session_state.disciplina),
+    key="disciplina"
+)
 
+tipo_doc = st.sidebar.selectbox(
+    f"📄 {tipo_txt}",
+    lista_tipo,
+    index=lista_tipo.index(st.session_state.tipo_doc),
+    key="tipo_doc"
+)
+
+ano = st.sidebar.selectbox(
+    f"📅 {ano_txt}",
+    lista_ano,
+    index=lista_ano.index(st.session_state.ano),
+    key="ano"
+)
+
+# ✅ BOTÃO LIMPAR CORRIGIDO
 if st.sidebar.button(limpar_txt):
+    st.session_state.disciplina = todos_txt
+    st.session_state.tipo_doc = todos_txt
+    st.session_state.ano = todos_txt
     st.rerun()
 
 # =========================
@@ -159,7 +190,7 @@ if ano != todos_txt:
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
 
 # =========================
-# RESUMO (COM ANO ✅)
+# RESUMO
 # =========================
 st.subheader(resumo_txt)
 
