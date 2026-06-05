@@ -28,19 +28,23 @@ if query_lang:
 # ✅ Botões com imagem dentro (HTML)
 st.sidebar.markdown("""
 <div style="display: flex; gap: 10px;">
+    
     <a href="?lang=PT" target="_self">
-        <button style="padding:6px 8px; font-size:12px;">
-            <img src="https://flagcdn.com/w20/br.png" style="vertical-align:middle; margin-right:5px;">
+        <button style="padding:6px 10px; font-size:12px; cursor:pointer;">
+            <img src="https://flagcdn.com/w20/br.png" 
+                 style="vertical-align:middle; margin-right:6px;">
             Português
         </button>
     </a>
 
     <a href="?lang=EN" target="_self">
-        <button style="padding:6px 8px; font-size:12px;">
-            <img src="https://flagcdn.com/w20/sg.png" style="vertical-align:middle; margin-right:5px;">
+        <button style="padding:6px 10px; font-size:12px; cursor:pointer;">
+            <img src="https://flagcdn.com/w20/sg.png" 
+                 style="vertical-align:middle; margin-right:6px;">
             English
         </button>
     </a>
+
 </div>
 """, unsafe_allow_html=True)
 
