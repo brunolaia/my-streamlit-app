@@ -137,11 +137,30 @@ lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 lista_ano = [todos_txt] + sorted(df["Ano"].unique())
 
-disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
-tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
-ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
+disciplina = st.sidebar.selectbox(
+    f"📂 {disciplina_txt}",
+    lista_disciplina,
+    key="disciplina"
+)
+
+tipo_doc = st.sidebar.selectbox(
+    f"📄 {tipo_txt}",
+    lista_tipo,
+    key="tipo_doc"
+)
+
+ano = st.sidebar.selectbox(
+    f"📅 {ano_txt}",
+    lista_ano,
+    key="ano"
+)
 
 if st.sidebar.button(limpar_txt):
+
+    st.session_state["disciplina"] = todos_txt
+    st.session_state["tipo_doc"] = todos_txt
+    st.session_state["ano"] = todos_txt
+
     st.rerun()
 
 # =========================
