@@ -165,22 +165,28 @@ lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 lista_ano = [todos_txt] + sorted(df["Ano"].unique())
 
-# Inicializa os filtros
+# Valores padrão
 if "disciplina" not in st.session_state:
-    st.session_state.disciplina = todos_txt
+    st.session_state["disciplina"] = todos_txt
 
 if "tipo_doc" not in st.session_state:
-    st.session_state.tipo_doc = todos_txt
+    st.session_state["tipo_doc"] = todos_txt
 
 if "ano" not in st.session_state:
-    st.session_state.ano = todos_txt
+    st.session_state["ano"] = todos_txt
 
-# Botão Limpar Filtros
-if st.sidebar.button(limpar_txt):
-    st.session_state.disciplina = todos_txt
-    st.session_state.tipo_doc = todos_txt
-    st.session_state.ano = todos_txt
-    st.rerun()
+# Função para limpar filtros
+def limpar_filtros():
+    st.session_state["disciplina"] = todos_txt
+    st.session_state["tipo_doc"] = todos_txt
+    st.session_state["ano"] = todos_txt
+
+# Botão limpar filtros
+st.sidebar.button(
+    limpar_txt,
+    on_click=limpar_filtros,
+    use_container_width=True
+)
 
 # Filtros
 disciplina = st.sidebar.selectbox(
