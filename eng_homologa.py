@@ -14,23 +14,6 @@ st.set_page_config(page_title="Dashboard Engenharia - Homologação", layout="wi
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
 
-# =========================
-# MENU LATERAL
-# =========================
-st.sidebar.header("MENU")
-
-col_pt, col_en = st.sidebar.columns(2)
-
-with col_pt:
-    if st.sidebar.button("🇧🇷 Português"):
-        st.session_state.lang = "PT"
-        st.rerun()
-
-with col_en:
-    if st.sidebar.button("🇺🇸 English"):
-        st.session_state.lang = "EN"
-        st.rerun()
-
 lang = st.session_state.lang
 
 # =========================
@@ -91,15 +74,34 @@ st.title(titulo)
 st.markdown(f"<p style='color:white; font-size:14px;'>{dev}</p>", unsafe_allow_html=True)
 
 # =========================
-# LEITURA COM CACHE
+# SIDEBAR
+# =========================
+st.sidebar.header("MENU")
+
+# =========================
+# LOADING DO EXCEL (COM BARRA)
 # =========================
 url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
 
-@st.cache_data
-def carregar_dados(url, sheet):
-    return pd.read_excel(url, sheet_name=sheet, engine="openpyxl")
+progress = st.progress(0)
 
-df = carregar_dados(url, sheet_excel)
+with st.spinner(loading_txt):
+
+    for i in range(0, 40):
+        time.sleep(0.01)
+        progress.progress(i + 1)
+
+    @st.cache_data
+    def carregar_dados(url, sheet):
+        return pd.read_excel(url, sheet_name=sheet, engine="openpyxl")
+
+    df = carregar_dados(url, sheet_excel)
+
+    for i in range(40, 100):
+        time.sleep(0.005)
+        progress.progress(i + 1)
+
+progress.empty()
 
 # =========================
 # TRATAMENTO
@@ -115,7 +117,6 @@ df["MesNum"] = df["Data"].dt.month
 df["Dia"] = df["Data"].dt.day
 
 df["Mês"] = df["MesNum"].map(meses)
-
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = ("SEMANA " if lang == "PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
@@ -130,20 +131,12 @@ lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 lista_ano = [todos_txt] + sorted(df["Ano"].unique())
 
-# estado inicial
 if "disciplina" not in st.session_state:
     st.session_state["disciplina"] = todos_txt
 if "tipo_doc" not in st.session_state:
     st.session_state["tipo_doc"] = todos_txt
 if "ano" not in st.session_state:
     st.session_state["ano"] = todos_txt
-
-def limpar_filtros():
-    st.session_state["disciplina"] = todos_txt
-    st.session_state["tipo_doc"] = todos_txt
-    st.session_state["ano"] = todos_txt
-
-st.sidebar.button(limpar_txt, on_click=limpar_filtros)
 
 disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina, key="disciplina")
 tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo, key="tipo_doc")
@@ -162,6 +155,17 @@ if tipo_doc != todos_txt:
 
 if ano != todos_txt:
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
+
+# =========================
+# BOTÃO LIMPAR (FINAL DA SIDEBAR)
+# =========================
+def limpar_filtros():
+    st.session_state["disciplina"] = todos_txt
+    st.session_state["tipo_doc"] = todos_txt
+    st.session_state["ano"] = todos_txt
+
+st.sidebar.markdown("---")
+st.sidebar.button(limpar_txt, on_click=limpar_filtros, use_container_width=True)
 
 # =========================
 # RESUMO
