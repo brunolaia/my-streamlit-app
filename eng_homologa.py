@@ -155,13 +155,6 @@ ano = st.sidebar.selectbox(
     key="ano"
 )
 
-if st.sidebar.button(limpar_txt):
-
-    st.session_state["disciplina"] = todos_txt
-    st.session_state["tipo_doc"] = todos_txt
-    st.session_state["ano"] = todos_txt
-
-    st.rerun()
 
 # =========================
 # FILTRO
