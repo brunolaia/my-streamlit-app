@@ -6,7 +6,7 @@ import time
 # =========================
 # CONFIGURAÇÃO
 # =========================
-st.set_page_config(page_title="Dashboard Engenharia", layout="wide")
+st.set_page_config(page_title="Dashboard Engenharia - Homologação", layout="wide")
 
 # =========================
 # CONTROLE DE IDIOMA
@@ -17,7 +17,7 @@ if "lang" not in st.session_state:
 # =========================
 # MENU LATERAL
 # =========================
-st.sidebar.header("MENU")
+st.sidebar.header("MENU - Homologação")
 
 col_pt, col_en = st.sidebar.columns(2)
 
