@@ -14,6 +14,21 @@ st.set_page_config(page_title="Dashboard Engenharia - Homologação", layout="wi
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
 
+# =========================
+# MENU LATERAL
+# =========================
+st.sidebar.header("MENU")
+
+col_pt, col_en = st.sidebar.columns(2)
+
+with col_pt:
+    if st.sidebar.button("🇧🇷 Português"):
+        st.session_state.lang = "PT"
+
+with col_en:
+    if st.sidebar.button("🇸🇬 English"):
+        st.session_state.lang = "EN"
+
 lang = st.session_state.lang
 
 # =========================
@@ -34,8 +49,8 @@ if lang == "PT":
     limpar_txt = "🔄 Limpar Filtros"
     resumo_txt = "📈 Resumo"
     total_txt = "Total"
-    disciplinas_txt = "Disciplina"
-    tipos_txt = "Tipo"
+    disciplinas_txt = "Disciplines"
+    tipos_txt = "Types"
     grafico_txt = "📊 Registros por Mês e Semana"
     tabela_txt = "📋 Dados detalhados"
     loading_txt = "📥 Carregando base de dados..."
@@ -55,7 +70,7 @@ else:
     limpar_txt = "🔄 Clear Filters"
     resumo_txt = "📈 Summary"
     total_txt = "Total"
-    disciplinas_txt = "Discipline"
+    disciplinas_txt = "Disciplines"
     tipos_txt = "Type"
     grafico_txt = "📊 Records by Month and Week"
     tabela_txt = "📋 Detailed Data"
@@ -74,34 +89,25 @@ st.title(titulo)
 st.markdown(f"<p style='color:white; font-size:14px;'>{dev}</p>", unsafe_allow_html=True)
 
 # =========================
-# SIDEBAR
-# =========================
-st.sidebar.header("MENU")
-
-# =========================
-# LOADING DO EXCEL (COM BARRA)
+# LEITURA COM LOADING
 # =========================
 url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
 
-progress = st.progress(0)
+progress_bar = st.progress(0)
 
 with st.spinner(loading_txt):
 
-    for i in range(0, 40):
+    for i in range(40):
         time.sleep(0.01)
-        progress.progress(i + 1)
+        progress_bar.progress(i + 1)
 
-    @st.cache_data
-    def carregar_dados(url, sheet):
-        return pd.read_excel(url, sheet_name=sheet, engine="openpyxl")
-
-    df = carregar_dados(url, sheet_excel)
+    df = pd.read_excel(url, sheet_name=sheet_excel, engine="openpyxl")
 
     for i in range(40, 100):
         time.sleep(0.005)
-        progress.progress(i + 1)
+        progress_bar.progress(i + 1)
 
-progress.empty()
+progress_bar.empty()
 
 # =========================
 # TRATAMENTO
@@ -115,12 +121,12 @@ df = df.dropna(subset=["Data"])
 df["Ano"] = df["Data"].dt.year
 df["MesNum"] = df["Data"].dt.month
 df["Dia"] = df["Data"].dt.day
-
 df["Mês"] = df["MesNum"].map(meses)
-df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
-df["Semana"] = ("SEMANA " if lang == "PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
-st.success("✅ Dados carregados com sucesso")
+df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
+df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
+
+st.success("✅ Dados carregados com sucesso - Atualizado em 05/06/2026" if lang == "PT" else "✅ Data loaded successfully - Updated on 06/05/2026")
 
 # =========================
 # FILTROS
@@ -131,19 +137,23 @@ lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 lista_ano = [todos_txt] + sorted(df["Ano"].unique())
 
-if "disciplina" not in st.session_state:
-    st.session_state["disciplina"] = todos_txt
-if "tipo_doc" not in st.session_state:
-    st.session_state["tipo_doc"] = todos_txt
-if "ano" not in st.session_state:
-    st.session_state["ano"] = todos_txt
-
-disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina, key="disciplina")
-tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo, key="tipo_doc")
-ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano, key="ano")
+disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
+tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
+ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
 
 # =========================
-# APLICAR FILTROS
+# 🔧 BOTÃO LIMPAR (ALTERADO CORRETAMENTE)
+# =========================
+def limpar_filtros():
+    st.session_state["disciplina"] = todos_txt
+    st.session_state["tipo_doc"] = todos_txt
+    st.session_state["ano"] = todos_txt
+
+st.sidebar.markdown("---")
+st.sidebar.button(limpar_txt, on_click=limpar_filtros)
+
+# =========================
+# FILTRO
 # =========================
 df_filtro = df.copy()
 
@@ -155,17 +165,6 @@ if tipo_doc != todos_txt:
 
 if ano != todos_txt:
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
-
-# =========================
-# BOTÃO LIMPAR (FINAL DA SIDEBAR)
-# =========================
-def limpar_filtros():
-    st.session_state["disciplina"] = todos_txt
-    st.session_state["tipo_doc"] = todos_txt
-    st.session_state["ano"] = todos_txt
-
-st.sidebar.markdown("---")
-st.sidebar.button(limpar_txt, on_click=limpar_filtros, use_container_width=True)
 
 # =========================
 # RESUMO
@@ -190,9 +189,11 @@ ordem_meses = list(meses.values())
 meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == m].empty]
 
 for linha in range(0, len(meses_com_dados), 3):
+
     cols = st.columns(3)
 
     for idx, mes in enumerate(meses_com_dados[linha:linha+3]):
+
         with cols[idx]:
 
             df_mes = df_filtro[df_filtro["Mês"] == mes]
@@ -237,7 +238,8 @@ for linha in range(0, len(meses_com_dados), 3):
             fig.update_layout(
                 title={"text": f"📅 {mes}", "x": 0.5},
                 height=320,
-                showlegend=False
+                showlegend=False,
+                hovermode=False
             )
 
             st.plotly_chart(fig, use_container_width=True)
