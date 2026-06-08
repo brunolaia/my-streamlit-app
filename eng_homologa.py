@@ -46,7 +46,6 @@ if lang == "PT":
     disciplina_txt = "Disciplina"
     ano_txt = "Ano"
     tipo_txt = "Tipo de Documento"
-    limpar_txt = "🔄 Limpar Filtros"
     resumo_txt = "📈 Resumo"
     total_txt = "Total"
     disciplinas_txt = "Disciplines"
@@ -67,7 +66,6 @@ else:
     disciplina_txt = "Discipline"
     ano_txt = "Year"
     tipo_txt = "Document Type"
-    limpar_txt = "🔄 Clear Filters"
     resumo_txt = "📈 Summary"
     total_txt = "Total"
     disciplinas_txt = "Disciplines"
@@ -140,19 +138,6 @@ lista_ano = [todos_txt] + sorted(df["Ano"].unique())
 disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
 tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
 ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
-
-# (BOTÃO REMOVIDO)
-
-# =========================
-# 🔧 BOTÃO LIMPAR (ALTERADO CORRETAMENTE)
-# =========================
-def limpar_filtros():
-    st.session_state["disciplina"] = todos_txt
-    st.session_state["tipo_doc"] = todos_txt
-    st.session_state["ano"] = todos_txt
-
-st.sidebar.markdown("---")
-st.sidebar.button(limpar_txt, on_click=limpar_filtros)
 
 # =========================
 # FILTRO
