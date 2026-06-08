@@ -40,7 +40,7 @@ sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 # TEXTOS DINÂMICOS
 # =========================
 if lang == "PT":
-    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 1"
+    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 2"
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
     disciplina_txt = "Disciplina"
@@ -207,10 +207,10 @@ for linha in range(0, len(meses_com_dados), 3):
 
             # ✅ HOVER CORRIGIDO
             fig.update_traces(
-                hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata}<extra></extra>",
-                customdata=semana_df["Registros"],
-                hoverlabel=dict(align="left")
-            )
+    hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata[0]}<extra></extra>",
+    customdata=semana_df[["Registros"]],
+    hoverlabel=dict(align="left")
+)
 
             fig.update_layout(
                 title={"text": f"📅 {mes}", "x": 0.5},
