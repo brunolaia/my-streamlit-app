@@ -87,7 +87,7 @@ st.title(titulo)
 st.markdown(f"<p style='color:white; font-size:14px;'>{dev}</p>", unsafe_allow_html=True)
 
 # =========================
-# LEITURA COM LOADING
+# LEITURA
 # =========================
 url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
 
@@ -186,7 +186,8 @@ for linha in range(0, len(meses_com_dados), 3):
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = df_mes.groupby("Semana").agg(
-                Quantidade=("Registro", "count")
+                Quantidade=("Registro", "count"),
+                Registros=("Registro", lambda x: "<br>".join(map(str, x)))
             ).reset_index()
 
             semana_df["SemanaNum"] = pd.to_numeric(
@@ -196,37 +197,24 @@ for linha in range(0, len(meses_com_dados), 3):
 
             semana_df = semana_df.sort_values("SemanaNum")
 
-            total = semana_df["Quantidade"].sum()
-
-            total_row = pd.DataFrame({
-                "Semana": ["TOTAL"],
-                "Quantidade": [total],
-                "SemanaNum": [0]
-            })
-
-            semana_df = pd.concat([total_row, semana_df], ignore_index=True)
-
-            semana_df["Cor"] = semana_df["Semana"].apply(
-                lambda x: "TOTAL" if x == "TOTAL" else "SEMANA"
-            )
-
             fig = px.bar(
                 semana_df,
                 x="Semana",
                 y="Quantidade",
                 text="Quantidade",
-                color="Cor",
-                color_discrete_map={
-                    "SEMANA": cores[(linha + idx) % len(cores)],
-                    "TOTAL": "#002F6C"
-                }
+                color_discrete_sequence=[cores[(linha + idx) % len(cores)]]
+            )
+
+            fig.update_traces(
+                hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata}",
+                customdata=semana_df["Registros"]
             )
 
             fig.update_layout(
                 title={"text": f"📅 {mes}", "x": 0.5},
                 height=320,
                 showlegend=False,
-                hovermode=False
+                hovermode="x"
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -236,3 +224,4 @@ for linha in range(0, len(meses_com_dados), 3):
 # =========================
 st.subheader(tabela_txt)
 st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
+``
