@@ -205,30 +205,21 @@ for linha in range(0, len(meses_com_dados), 3):
                 color_discrete_sequence=[cores[(linha + idx) % len(cores)]]
             )
 
+            # ✅ HOVER CORRIGIDO
             fig.update_traces(
-                hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata}",
-                customdata=semana_df["Registros"]
+                hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata}<extra></extra>",
+                customdata=semana_df["Registros"],
+                hoverlabel=dict(align="left")
             )
 
-            
-fig.update_traces(
-    hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata}<extra></extra>",
-    customdata=semana_df["Registros"],
-    hoverlabel=dict(
-        align="left"
-    )
-)
-
-fig.update_layout(
-    title={"text": f"📅 {mes}", "x": 0.5},
-    height=320,
-    showlegend=False,
-    hovermode="closest"
-)
-
+            fig.update_layout(
+                title={"text": f"📅 {mes}", "x": 0.5},
+                height=320,
+                showlegend=False,
+                hovermode="closest"
+            )
 
             st.plotly_chart(fig, use_container_width=True)
-
 # =========================
 # TABELA
 # =========================
