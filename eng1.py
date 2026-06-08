@@ -6,7 +6,7 @@ import time
 # =========================
 # CONFIGURAÇÃO
 # =========================
-st.set_page_config(page_title="Dashboard Engenharia", layout="wide")
+st.set_page_config(page_title="Dashboard Engenharia - CEDOC", layout="wide")
 
 # =========================
 # CONTROLE DE IDIOMA
@@ -22,11 +22,11 @@ st.sidebar.header("MENU")
 col_pt, col_en = st.sidebar.columns(2)
 
 with col_pt:
-    if st.button("🇧🇷 Português"):
+    if st.sidebar.button("🇧🇷 Português"):
         st.session_state.lang = "PT"
 
 with col_en:
-    if st.button("🇸🇬 English"):
+    if st.sidebar.button("🇸🇬 English"):
         st.session_state.lang = "EN"
 
 lang = st.session_state.lang
@@ -46,11 +46,10 @@ if lang == "PT":
     disciplina_txt = "Disciplina"
     ano_txt = "Ano"
     tipo_txt = "Tipo de Documento"
-    limpar_txt = "🔄 Limpar Filtros"
     resumo_txt = "📈 Resumo"
     total_txt = "Total"
-    disciplinas_txt = "Disciplinas"
-    tipos_txt = "Tipos"
+    disciplinas_txt = "Disciplines"
+    tipos_txt = "Types"
     grafico_txt = "📊 Registros por Mês e Semana"
     tabela_txt = "📋 Dados detalhados"
     loading_txt = "📥 Carregando base de dados..."
@@ -67,11 +66,10 @@ else:
     disciplina_txt = "Discipline"
     ano_txt = "Year"
     tipo_txt = "Document Type"
-    limpar_txt = "🔄 Clear Filters"
     resumo_txt = "📈 Summary"
     total_txt = "Total"
     disciplinas_txt = "Disciplines"
-    tipos_txt = "Types"
+    tipos_txt = "Type"
     grafico_txt = "📊 Records by Month and Week"
     tabela_txt = "📋 Detailed Data"
     loading_txt = "📥 Loading database..."
@@ -89,7 +87,7 @@ st.title(titulo)
 st.markdown(f"<p style='color:white; font-size:14px;'>{dev}</p>", unsafe_allow_html=True)
 
 # =========================
-# LEITURA COM LOADING
+# LEITURA
 # =========================
 url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
 
@@ -129,7 +127,7 @@ df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(s
 st.success("✅ Dados carregados com sucesso - Atualizado em 05/06/2026" if lang == "PT" else "✅ Data loaded successfully - Updated on 06/05/2026")
 
 # =========================
-# FILTROS (ORDEM ALTERADA ✅)
+# FILTROS
 # =========================
 st.sidebar.subheader(filtros_txt)
 
@@ -140,9 +138,6 @@ lista_ano = [todos_txt] + sorted(df["Ano"].unique())
 disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
 tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
 ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
-
-if st.sidebar.button(limpar_txt):
-    st.rerun()
 
 # =========================
 # FILTRO
@@ -159,12 +154,10 @@ if ano != todos_txt:
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
 
 # =========================
-# RESUMO (COM ANO ✅)
+# RESUMO
 # =========================
 st.subheader(resumo_txt)
-
 col1, col2, col3, col4 = st.columns(4)
-
 col1.metric(total_txt, len(df_filtro))
 col2.metric(disciplinas_txt, disciplina)
 col3.metric(tipos_txt, tipo_doc)
@@ -175,23 +168,28 @@ col4.metric(ano_txt, ano)
 # =========================
 st.subheader(grafico_txt)
 
+st.markdown("""
+<style>
+.js-plotly-plot .hoverlayer {
+    z-index: 999999 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
-
 meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == m].empty]
 
 for linha in range(0, len(meses_com_dados), 3):
-
     cols = st.columns(3)
 
     for idx, mes in enumerate(meses_com_dados[linha:linha+3]):
-
         with cols[idx]:
-
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = df_mes.groupby("Semana").agg(
-                Quantidade=("Registro", "count")
+                Quantidade=("Registro", "count"),
+                Registros=("Registro", lambda x: "<br>".join(map(str, x)))
             ).reset_index()
 
             semana_df["SemanaNum"] = pd.to_numeric(
@@ -201,37 +199,25 @@ for linha in range(0, len(meses_com_dados), 3):
 
             semana_df = semana_df.sort_values("SemanaNum")
 
-            total = semana_df["Quantidade"].sum()
-
-            total_row = pd.DataFrame({
-                "Semana": ["TOTAL"],
-                "Quantidade": [total],
-                "SemanaNum": [0]
-            })
-
-            semana_df = pd.concat([total_row, semana_df], ignore_index=True)
-
-            semana_df["Cor"] = semana_df["Semana"].apply(
-                lambda x: "TOTAL" if x == "TOTAL" else "SEMANA"
-            )
-
             fig = px.bar(
                 semana_df,
                 x="Semana",
                 y="Quantidade",
                 text="Quantidade",
-                color="Cor",
-                color_discrete_map={
-                    "SEMANA": cores[(linha + idx) % len(cores)],
-                    "TOTAL": "#002F6C"
-                }
+                custom_data=["Registros"],
+                color_discrete_sequence=[cores[(linha + idx) % len(cores)]]
+            )
+
+            fig.update_traces(
+                hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata[0]}<extra></extra>",
+                hoverlabel=dict(align="left")
             )
 
             fig.update_layout(
                 title={"text": f"📅 {mes}", "x": 0.5},
                 height=320,
                 showlegend=False,
-                hovermode=False
+                hovermode="x unified"
             )
 
             st.plotly_chart(fig, use_container_width=True)
