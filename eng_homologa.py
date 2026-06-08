@@ -224,4 +224,3 @@ for linha in range(0, len(meses_com_dados), 3):
 # =========================
 st.subheader(tabela_txt)
 st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
-``
