@@ -141,6 +141,8 @@ disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
 tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
 ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
 
+# (BOTÃO REMOVIDO)
+
 # =========================
 # 🔧 BOTÃO LIMPAR (ALTERADO CORRETAMENTE)
 # =========================
