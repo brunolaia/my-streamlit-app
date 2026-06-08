@@ -40,7 +40,7 @@ sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 # TEXTOS DINÂMICOS
 # =========================
 if lang == "PT":
-    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 2"
+    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 3"
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
     disciplina_txt = "Disciplina"
@@ -157,9 +157,7 @@ if ano != todos_txt:
 # RESUMO
 # =========================
 st.subheader(resumo_txt)
-
 col1, col2, col3, col4 = st.columns(4)
-
 col1.metric(total_txt, len(df_filtro))
 col2.metric(disciplinas_txt, disciplina)
 col3.metric(tipos_txt, tipo_doc)
@@ -170,19 +168,23 @@ col4.metric(ano_txt, ano)
 # =========================
 st.subheader(grafico_txt)
 
+st.markdown("""
+<style>
+.js-plotly-plot .hoverlayer {
+    z-index: 999999 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
-
 meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == m].empty]
 
 for linha in range(0, len(meses_com_dados), 3):
-
     cols = st.columns(3)
 
     for idx, mes in enumerate(meses_com_dados[linha:linha+3]):
-
         with cols[idx]:
-
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = df_mes.groupby("Semana").agg(
@@ -202,24 +204,24 @@ for linha in range(0, len(meses_com_dados), 3):
                 x="Semana",
                 y="Quantidade",
                 text="Quantidade",
+                custom_data=["Registros"],
                 color_discrete_sequence=[cores[(linha + idx) % len(cores)]]
             )
 
-            # ✅ HOVER CORRIGIDO
             fig.update_traces(
-    hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata[0]}<extra></extra>",
-    customdata=semana_df[["Registros"]],
-    hoverlabel=dict(align="left")
-)
+                hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata[0]}<extra></extra>",
+                hoverlabel=dict(align="left")
+            )
 
             fig.update_layout(
                 title={"text": f"📅 {mes}", "x": 0.5},
                 height=320,
                 showlegend=False,
-                hovermode="closest"
+                hovermode="x unified"
             )
 
             st.plotly_chart(fig, use_container_width=True)
+
 # =========================
 # TABELA
 # =========================
