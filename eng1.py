@@ -49,7 +49,7 @@ if lang == "PT":
     resumo_txt = "📈 Resumo"
     total_txt = "Total"
     disciplinas_txt = "Disciplines"
-    tipos_txt = "Types"
+    tipos_txt = "Tipo"
     grafico_txt = "📊 Registros por Mês e Semana"
     tabela_txt = "📋 Dados detalhados"
     loading_txt = "📥 Carregando base de dados..."
