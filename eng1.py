@@ -48,7 +48,7 @@ if lang == "PT":
     tipo_txt = "Tipo de Documento"
     resumo_txt = "📈 Resumo"
     total_txt = "Total"
-    disciplinas_txt = "Disciplines"
+    disciplinas_txt = "Disciplina"
     tipos_txt = "Tipo"
     grafico_txt = "📊 Registros por Mês e Semana"
     tabela_txt = "📋 Dados detalhados"
