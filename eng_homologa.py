@@ -40,7 +40,7 @@ sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 # TEXTOS DINÂMICOS
 # =========================
 if lang == "PT":
-    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 3"
+    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 4"
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
     disciplina_txt = "Disciplina"
@@ -199,13 +199,33 @@ for linha in range(0, len(meses_com_dados), 3):
 
             semana_df = semana_df.sort_values("SemanaNum")
 
+            total_registros = "<br>".join(map(str, df_mes["Registro"]))
+            total_quantidade = semana_df["Quantidade"].sum()
+
+            total_df = pd.DataFrame({
+                "Semana": ["Total"],
+                "Quantidade": [total_quantidade],
+                "Registros": [total_registros],
+                "SemanaNum": [999]
+            })
+
+            semana_df = pd.concat([semana_df, total_df], ignore_index=True)
+
+            semana_df["Cor"] = semana_df["Semana"].apply(
+                lambda x: "TOTAL" if x == "Total" else "SEMANA"
+            )
+
             fig = px.bar(
                 semana_df,
                 x="Semana",
                 y="Quantidade",
                 text="Quantidade",
                 custom_data=["Registros"],
-                color_discrete_sequence=[cores[(linha + idx) % len(cores)]]
+                color="Cor",
+                color_discrete_map={
+                    "SEMANA": cores[(linha + idx) % len(cores)],
+                    "TOTAL": "#002F6C"
+                }
             )
 
             fig.update_traces(
