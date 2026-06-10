@@ -40,7 +40,7 @@ sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 # TEXTOS DINÂMICOS
 # =========================
 if lang == "PT":
-    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 4"
+    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 5"
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
     disciplina_txt = "Disciplina"
