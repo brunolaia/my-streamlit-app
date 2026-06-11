@@ -124,7 +124,7 @@ df["Mês"] = df["MesNum"].map(meses)
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
-st.success("✅ Dados carregados com sucesso - Atualizado em 09/06/2026" if lang == "PT" else "✅ Data loaded successfully - Updated on 06/09/2026")
+st.success("✅ Dados carregados com sucesso - Atualizado em 05/06/2026" if lang == "PT" else "✅ Data loaded successfully - Updated on 06/05/2026")
 
 # =========================
 # FILTROS
@@ -199,13 +199,34 @@ for linha in range(0, len(meses_com_dados), 3):
 
             semana_df = semana_df.sort_values("SemanaNum")
 
+            total_registros = "<br>".join(map(str, df_mes["Registro"]))
+            total_quantidade = semana_df["Quantidade"].sum()
+
+            total_df = pd.DataFrame({
+                "Semana": ["Total"],
+                "Quantidade": [total_quantidade],
+                "Registros": [total_registros],
+                "SemanaNum": [999]
+            })
+
+            # TOTAL PRIMEIRO (ajuste solicitado)
+            semana_df = pd.concat([total_df, semana_df], ignore_index=True)
+
+            semana_df["Cor"] = semana_df["Semana"].apply(
+                lambda x: "TOTAL" if x == "Total" else "SEMANA"
+            )
+
             fig = px.bar(
                 semana_df,
                 x="Semana",
                 y="Quantidade",
                 text="Quantidade",
                 custom_data=["Registros"],
-                color_discrete_sequence=[cores[(linha + idx) % len(cores)]]
+                color="Cor",
+                color_discrete_map={
+                    "SEMANA": cores[(linha + idx) % len(cores)],
+                    "TOTAL": "#002F6C"
+                }
             )
 
             fig.update_traces(
