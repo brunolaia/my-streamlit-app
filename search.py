@@ -196,7 +196,7 @@ if st.session_state.historico:
             st.session_state.historico = []
             st.rerun()
 
-   st.markdown(
+  st.markdown(
     f"""
     <div class="card"
         title="📁 {caminho}"
