@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import time
+import requests
+from datetime import datetime
 
 # =========================
 # CONFIGURAÇÃO
@@ -13,6 +15,22 @@ st.set_page_config(page_title="Dashboard Engenharia - CEDOC", layout="wide")
 # =========================
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
+
+# =========================
+# FUNÇÃO DATA GITHUB (CORRIGIDA)
+# =========================
+def get_github_file_date():
+    try:
+        api_url = "https://api.github.com/repos/brunolaia/my-streamlit-app/commits?path=BD_ENG.xlsx&page=1&per_page=1"
+        r = requests.get(api_url)
+
+        if r.status_code == 200:
+            data = r.json()
+            date_str = data[0]["commit"]["committer"]["date"]
+            return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+    except:
+        pass
+    return None
 
 # =========================
 # MENU LATERAL
@@ -48,8 +66,8 @@ if lang == "PT":
     tipo_txt = "Tipo de Documento"
     resumo_txt = "📈 Resumo"
     total_txt = "Total"
-    disciplinas_txt = "Disciplina"
-    tipos_txt = "Tipo"
+    disciplinas_txt = "Disciplines"
+    tipos_txt = "Types"
     grafico_txt = "📊 Registros por Mês e Semana"
     tabela_txt = "📋 Dados detalhados"
     loading_txt = "📥 Carregando base de dados..."
