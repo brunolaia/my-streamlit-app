@@ -4,7 +4,6 @@ import plotly.express as px
 import time
 import requests
 from datetime import datetime
-from email.utils import parsedate_to_datetime
 
 # =========================
 # CONFIGURAÇÃO
@@ -18,13 +17,17 @@ if "lang" not in st.session_state:
     st.session_state.lang = "PT"
 
 # =========================
-# FUNÇÃO - PEGAR DATA DO GITHUB
+# FUNÇÃO DATA GITHUB (CORRIGIDA)
 # =========================
-def get_github_file_date(url):
+def get_github_file_date():
     try:
-        r = requests.head(url)
-        if "Last-Modified" in r.headers:
-            return parsedate_to_datetime(r.headers["Last-Modified"])
+        api_url = "https://api.github.com/repos/brunolaia/my-streamlit-app/commits?path=BD_ENG.xlsx&page=1&per_page=1"
+        r = requests.get(api_url)
+
+        if r.status_code == 200:
+            data = r.json()
+            date_str = data[0]["commit"]["committer"]["date"]
+            return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
     except:
         pass
     return None
@@ -55,7 +58,7 @@ sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 # TEXTOS DINÂMICOS
 # =========================
 if lang == "PT":
-    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 8"
+    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 7"
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
     disciplina_txt = "Disciplina"
@@ -140,21 +143,19 @@ df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
 # =========================
-# DATA DO EXCEL (GITHUB)
+# DATA DO EXCEL (CORRIGIDO)
 # =========================
-file_date = get_github_file_date(url)
+file_date = get_github_file_date()
 
 if file_date:
     if lang == "PT":
         data_formatada = file_date.strftime("%d/%m/%Y")
-        msg_status = f"✅ Dados carregados com sucesso - Atualizado em {data_formatada}"
+        st.success(f"✅ Dados carregados com sucesso - Atualizado em {data_formatada}")
     else:
         data_formatada = file_date.strftime("%m/%d/%Y")
-        msg_status = f"✅ Data loaded successfully - Updated on {data_formatada}"
+        st.success(f"✅ Data loaded successfully - Updated on {data_formatada}")
 else:
-    msg_status = "✅ Dados carregados com sucesso"
-
-st.success(msg_status)
+    st.success("✅ Dados carregados com sucesso")
 
 # =========================
 # FILTROS
@@ -197,14 +198,6 @@ col4.metric(ano_txt, ano)
 # GRÁFICOS
 # =========================
 st.subheader(grafico_txt)
-
-st.markdown("""
-<style>
-.js-plotly-plot .hoverlayer {
-    z-index: 999999 !important;
-}
-</style>
-""", unsafe_allow_html=True)
 
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
