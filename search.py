@@ -95,22 +95,24 @@ if "busca" not in st.session_state:
     st.session_state.busca = ""
 
 # =========================
-# GITHUB EXCEL
+# GITHUB TXT
 # =========================
-GITHUB_XLSX_URL = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/A-CEDOC_BD.xlsx"
+GITHUB_TXT_URL = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/A-CEDOC_BD.txt"
 
 caminhos = []
 
 with st.spinner("🔄 Carregando base de dados..."):
     try:
-        response = requests.get(GITHUB_XLSX_URL)
+        response = requests.get(GITHUB_TXT_URL)
         response.raise_for_status()
 
-        df = pd.read_excel(BytesIO(response.content), engine="openpyxl")
+        conteudo = response.text
 
-        # 👉 CONVERTE TODAS AS COLUNAS EM LISTA (ignora vazios)
-        caminhos = df.astype(str).stack().tolist()
-        caminhos = [c.strip() for c in caminhos if c.strip() and c != "nan"]
+        caminhos = [
+            linha.strip()
+            for linha in conteudo.splitlines()
+            if linha.strip()
+        ]
 
         data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M")
         st.markdown(f"**📅 Atualizado em: {data_atualizacao}**")
@@ -205,19 +207,3 @@ if st.session_state.historico:
 
 # =========================
 # FOOTER
-# =========================
-st.markdown("---")
-
-st.markdown(
-    """
-    <div style="
-        text-align:center;
-        color:#6b7280;
-        font-size:12px;
-        padding-top:10px;
-    ">
-        Desenvolvido por Bruno Laia
-    </div>
-    """,
-    unsafe_allow_html=True
-)
