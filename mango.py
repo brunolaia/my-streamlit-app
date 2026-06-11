@@ -3,15 +3,16 @@ import re
 
 st.set_page_config(page_title="YouTube no Streamlit", layout="wide")
 
-st.title("xxx")
+st.title("YouTube no Streamlit")
 
-url = st.text_input("xxx:")
+url = st.text_input("Cole o link do YouTube:")
 
 def pegar_id_youtube(url):
     padroes = [
-        r"v=([^&]+)",
+        r"(?:v=)([^&]+)",
         r"youtu\.be/([^?&]+)",
-        r"embed/([^?&]+)"
+        r"youtube\.com/embed/([^?&]+)",
+        r"youtube\.com/shorts/([^?&]+)"
     ]
 
     for padrao in padroes:
@@ -25,24 +26,26 @@ if url:
     video_id = pegar_id_youtube(url)
 
     if video_id:
-        embed_url = f"https://www.youtube.com/embed/{video_id}"
+        embed_url = f"https://www.youtube-nocookie.com/embed/{video_id}?rel=0"
 
         st.components.v1.html(
             f"""
-            <div style="display:flex; justify-content:center;">
-                <iframe
-                    width="100%"
-                    height="600"
-                    src="{embed_url}"
-                    title="YouTube video player"
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen>
-                </iframe>
-            </div>
+            <iframe
+                width="100%"
+                height="600"
+                src="{embed_url}"
+                title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+            </iframe>
             """,
             height=620
         )
+
+        st.markdown("### Caso o vídeo não carregue:")
+        st.video(f"https://www.youtube.com/watch?v={video_id}")
+
     else:
         st.error("Link do YouTube inválido.")
 else:
