@@ -167,7 +167,7 @@ if arquivo_txt:
         # =========================
         # RESULTADOS
         # =========================
-        for caminho in resultados:
+       for caminho in resultados:
     nome_arquivo = caminho.split("\\")[-1]
 
     st.markdown(
@@ -182,7 +182,6 @@ if arquivo_txt:
         """,
         unsafe_allow_html=True
     )
-
 # =========================
 # HISTÓRICO
 # =========================
