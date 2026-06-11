@@ -203,17 +203,18 @@ for linha in range(0, len(meses_com_dados), 3):
             total_quantidade = semana_df["Quantidade"].sum()
 
             total_df = pd.DataFrame({
-                "Semana": ["Total"],
-                "Quantidade": [total_quantidade],
-                "Registros": [total_registros],
-                "SemanaNum": [999]
-            })
+    "Semana": ["Total"],
+    "Quantidade": [total_quantidade],
+    "Registros": [total_registros],
+    "SemanaNum": [999]
+})
 
-            semana_df = pd.concat([semana_df, total_df], ignore_index=True)
+# ALTERAÇÃO AQUI
+semana_df = pd.concat([total_df, semana_df], ignore_index=True)
 
-            semana_df["Cor"] = semana_df["Semana"].apply(
-                lambda x: "TOTAL" if x == "Total" else "SEMANA"
-            )
+semana_df["Cor"] = semana_df["Semana"].apply(
+    lambda x: "TOTAL" if x == "Total" else "SEMANA"
+)
 
             fig = px.bar(
                 semana_df,
