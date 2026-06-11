@@ -1,6 +1,8 @@
 import streamlit as st
 from datetime import datetime
 import requests
+import pandas as pd
+from io import BytesIO
 
 st.set_page_config(
     page_title="Pesquisa de Arquivos A-CEDOC",
@@ -93,24 +95,22 @@ if "busca" not in st.session_state:
     st.session_state.busca = ""
 
 # =========================
-# GITHUB TXT
+# GITHUB EXCEL
 # =========================
-# ⚠️ COLOQUE AQUI O LINK RAW DO SEU BD
-GITHUB_TXT_URL = "https://github.com/brunolaia/my-streamlit-app/raw/refs/heads/main/A-CEDOC_BD.xlsx"
+GITHUB_XLSX_URL = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/A-CEDOC_BD.xlsx"
 
 caminhos = []
 
 with st.spinner("🔄 Carregando base de dados..."):
     try:
-        response = requests.get(GITHUB_TXT_URL)
+        response = requests.get(GITHUB_XLSX_URL)
         response.raise_for_status()
-        conteudo = response.text
 
-        caminhos = [
-            linha.strip()
-            for linha in conteudo.splitlines()
-            if linha.strip()
-        ]
+        df = pd.read_excel(BytesIO(response.content), engine="openpyxl")
+
+        # 👉 CONVERTE TODAS AS COLUNAS EM LISTA (ignora vazios)
+        caminhos = df.astype(str).stack().tolist()
+        caminhos = [c.strip() for c in caminhos if c.strip() and c != "nan"]
 
         data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M")
         st.markdown(f"**📅 Atualizado em: {data_atualizacao}**")
