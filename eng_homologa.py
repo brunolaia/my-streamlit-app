@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import time
+import requests
+from datetime import datetime
+from email.utils import parsedate_to_datetime
 
 # =========================
 # CONFIGURAÇÃO
@@ -13,6 +16,18 @@ st.set_page_config(page_title="Dashboard Engenharia - Homologação", layout="wi
 # =========================
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
+
+# =========================
+# FUNÇÃO - PEGAR DATA DO GITHUB
+# =========================
+def get_github_file_date(url):
+    try:
+        r = requests.head(url)
+        if "Last-Modified" in r.headers:
+            return parsedate_to_datetime(r.headers["Last-Modified"])
+    except:
+        pass
+    return None
 
 # =========================
 # MENU LATERAL
@@ -40,7 +55,7 @@ sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 # TEXTOS DINÂMICOS
 # =========================
 if lang == "PT":
-    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 7"
+    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 8"
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
     disciplina_txt = "Disciplina"
@@ -124,7 +139,22 @@ df["Mês"] = df["MesNum"].map(meses)
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
-st.success("✅ Dados carregados com sucesso - Atualizado em 05/06/2026" if lang == "PT" else "✅ Data loaded successfully - Updated on 06/05/2026")
+# =========================
+# DATA DO EXCEL (GITHUB)
+# =========================
+file_date = get_github_file_date(url)
+
+if file_date:
+    if lang == "PT":
+        data_formatada = file_date.strftime("%d/%m/%Y")
+        msg_status = f"✅ Dados carregados com sucesso - Atualizado em {data_formatada}"
+    else:
+        data_formatada = file_date.strftime("%m/%d/%Y")
+        msg_status = f"✅ Data loaded successfully - Updated on {data_formatada}"
+else:
+    msg_status = "✅ Dados carregados com sucesso"
+
+st.success(msg_status)
 
 # =========================
 # FILTROS
@@ -209,7 +239,6 @@ for linha in range(0, len(meses_com_dados), 3):
                 "SemanaNum": [999]
             })
 
-            # TOTAL PRIMEIRO (ajuste solicitado)
             semana_df = pd.concat([total_df, semana_df], ignore_index=True)
 
             semana_df["Cor"] = semana_df["Semana"].apply(
