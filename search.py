@@ -164,7 +164,7 @@ if arquivo_txt:
         if not resultados:
             st.warning("Nenhum arquivo encontrado.")
 
-       # =========================
+      # =========================
     # RESULTADOS
     # =========================
     for caminho in resultados:
