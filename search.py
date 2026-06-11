@@ -1,8 +1,5 @@
 import streamlit as st
 from datetime import datetime
-import requests
-import pandas as pd
-from io import BytesIO
 
 st.set_page_config(
     page_title="Pesquisa de Arquivos A-CEDOC",
@@ -95,7 +92,7 @@ if "busca" not in st.session_state:
     st.session_state.busca = ""
 
 # =========================
-# UPLOAD TXT (ALTERADO)
+# UPLOAD TXT
 # =========================
 arquivo_txt = st.file_uploader("Selecione o arquivo .txt", type=["txt"])
 
@@ -116,7 +113,7 @@ if arquivo_txt:
             data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M")
             st.markdown(f"**📅 Atualizado em: {data_atualizacao}**")
 
-        except Exception as e:
+        except:
             st.error("Erro ao carregar arquivo TXT")
             st.stop()
 
@@ -164,24 +161,25 @@ if arquivo_txt:
         if not resultados:
             st.warning("Nenhum arquivo encontrado.")
 
-      # =========================
-    # RESULTADOS
-    # =========================
-    for caminho in resultados:
-        nome_arquivo = caminho.split("\\")[-1]
+        # =========================
+        # RESULTADOS
+        # =========================
+        for caminho in resultados:
+            nome_arquivo = caminho.split("\\")[-1]
 
-        st.markdown(
-            f"""
-            <div class="card"
-                title="📁 {caminho}"
-                onclick="navigator.clipboard.writeText('{caminho.replace("'", "\\'")}')">
+            st.markdown(
+                f"""
+                <div class="card"
+                    title="📁 {caminho}"
+                    onclick="navigator.clipboard.writeText('{caminho.replace("'", "\\'")}')">
 
-                <div class="file-text">📄 {nome_arquivo}</div>
+                    <div class="file-text">📄 {nome_arquivo}</div>
 
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
 # =========================
 # HISTÓRICO
 # =========================
@@ -195,18 +193,13 @@ if st.session_state.historico:
             st.session_state.historico = []
             st.rerun()
 
-  st.markdown(
-    f"""
-    <div class="card"
-        title="📁 {caminho}"
-        onclick="navigator.clipboard.writeText('{caminho}')">
-
-        <div class="file-text">📄 {nome_arquivo}</div>
-
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+    st.markdown(
+        "".join(
+            f"<span class='tag'>{h}</span>"
+            for h in st.session_state.historico[::-1][:12]
+        ),
+        unsafe_allow_html=True
+    )
 
 # =========================
 # FOOTER
