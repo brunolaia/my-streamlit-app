@@ -124,7 +124,20 @@ df["Mês"] = df["MesNum"].map(meses)
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
-st.success("✅ Dados carregados com sucesso - Atualizado em 05/06/2026" if lang == "PT" else "✅ Data loaded successfully - Updated on 06/05/2026")
+# =========================
+# DATA DO EXCEL (CORRIGIDO)
+# =========================
+file_date = get_github_file_date()
+
+if file_date:
+    if lang == "PT":
+        data_formatada = file_date.strftime("%d/%m/%Y")
+        st.success(f"✅ Dados carregados com sucesso - Atualizado em {data_formatada}")
+    else:
+        data_formatada = file_date.strftime("%m/%d/%Y")
+        st.success(f"✅ Data loaded successfully - Updated on {data_formatada}")
+else:
+    st.success("✅ Dados carregados com sucesso")
 
 # =========================
 # FILTROS
@@ -168,14 +181,6 @@ col4.metric(ano_txt, ano)
 # =========================
 st.subheader(grafico_txt)
 
-st.markdown("""
-<style>
-.js-plotly-plot .hoverlayer {
-    z-index: 999999 !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
 meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == m].empty]
@@ -209,7 +214,6 @@ for linha in range(0, len(meses_com_dados), 3):
                 "SemanaNum": [999]
             })
 
-            # TOTAL PRIMEIRO (ajuste solicitado)
             semana_df = pd.concat([total_df, semana_df], ignore_index=True)
 
             semana_df["Cor"] = semana_df["Semana"].apply(
