@@ -173,7 +173,7 @@ if arquivo_txt:
                     title="📁 {caminho}"
                     onclick="navigator.clipboard.writeText('{caminho.replace("'", "\\'")}')">
 
-                    <div class="file-text">📄 {nome_arquivo}</div>
+                    📄 {nome_arquivo}
 
                 </div>
                 """,
