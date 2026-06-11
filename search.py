@@ -164,24 +164,24 @@ if arquivo_txt:
         if not resultados:
             st.warning("Nenhum arquivo encontrado.")
 
-        # =========================
-        # RESULTADOS
-        # =========================
-       for caminho in resultados:
-    nome_arquivo = caminho.split("\\")[-1]
+       # =========================
+    # RESULTADOS
+    # =========================
+    for caminho in resultados:
+        nome_arquivo = caminho.split("\\")[-1]
 
-    st.markdown(
-        f"""
-        <div class="card"
-            title="📁 {caminho}"
-            onclick="navigator.clipboard.writeText('{caminho.replace("'", "\\'")}')">
+        st.markdown(
+            f"""
+            <div class="card"
+                title="📁 {caminho}"
+                onclick="navigator.clipboard.writeText('{caminho.replace("'", "\\'")}')">
 
-            <div class="file-text">📄 {nome_arquivo}</div>
+                <div class="file-text">📄 {nome_arquivo}</div>
 
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 # =========================
 # HISTÓRICO
 # =========================
