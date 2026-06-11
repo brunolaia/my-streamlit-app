@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime
+import requests
 
 st.set_page_config(
     page_title="Pesquisa de Arquivos A-CEDOC",
@@ -92,109 +93,115 @@ if "busca" not in st.session_state:
     st.session_state.busca = ""
 
 # =========================
-# UPLOAD
+# GITHUB TXT
 # =========================
-arquivo_txt = st.file_uploader(
-    "Selecione o banco de dados (.txt)",
-    type=["txt"]
-)
+# ⚠️ COLOQUE AQUI O LINK RAW DO SEU BD
+GITHUB_TXT_URL = "https://github.com/brunolaia/my-streamlit-app/raw/refs/heads/main/A-CEDOC_BD.xlsx"
 
 caminhos = []
 
-if arquivo_txt:
-    conteudo = arquivo_txt.read().decode("utf-8", errors="ignore")
+with st.spinner("🔄 Carregando base de dados..."):
+    try:
+        response = requests.get(GITHUB_TXT_URL)
+        response.raise_for_status()
+        conteudo = response.text
 
-    caminhos = [
-        linha.strip()
-        for linha in conteudo.splitlines()
-        if linha.strip()
-    ]
-
-    # =========================
-    # DATA DE ATUALIZAÇÃO (UPLOAD TIME)
-    # =========================
-    data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M")
-    st.markdown(f"**📅 Atualizado em:** {data_atualizacao}")
-
-    # =========================
-    # BUSCA
-    # =========================
-    col1, col2, col3 = st.columns([3, 1, 1])
-
-    with col1:
-        busca = st.text_input(
-            "Buscar arquivos",
-            value=st.session_state.busca,
-            placeholder="Digite qualquer termo..."
-        )
-
-    with col2:
-        pesquisar = st.button("🔎 Pesquisar", use_container_width=True)
-
-    with col3:
-        limpar = st.button("🧹 Limpar", use_container_width=True)
-
-    # =========================
-    # LIMPAR
-    # =========================
-    if limpar:
-        st.session_state.busca = ""
-        st.rerun()
-
-    # =========================
-    # PESQUISA
-    # =========================
-    if pesquisar and busca:
-        st.session_state.busca = busca
-
-        if busca not in st.session_state.historico:
-            st.session_state.historico.append(busca)
-
-        resultados = [
-            c for c in caminhos
-            if busca.lower() in c.lower()
+        caminhos = [
+            linha.strip()
+            for linha in conteudo.splitlines()
+            if linha.strip()
         ]
 
-        st.success(f"{len(resultados)} resultado(s) encontrado(s)")
+        data_atualizacao = datetime.now().strftime("%d/%m/%Y %H:%M")
+        st.markdown(f"**📅 Atualizado em: {data_atualizacao}**")
 
-        if not resultados:
-            st.warning("Nenhum arquivo encontrado.")
+    except Exception as e:
+        st.error("Erro ao carregar arquivo do GitHub")
+        st.stop()
 
-        # =========================
-        # RESULTADOS
-        # =========================
-        for i, caminho in enumerate(resultados):
-            nome_arquivo = caminho.split("\\")[-1]
+# =========================
+# BUSCA
+# =========================
+col1, col2, col3 = st.columns([3, 1, 1])
 
-            st.markdown(
-                f"""
-                <div class="card" title="{caminho}" onclick="navigator.clipboard.writeText('{caminho}')">
-                    <div class="file-text">📄 {nome_arquivo}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+with col1:
+    busca = st.text_input(
+        "Buscar arquivos",
+        value=st.session_state.busca,
+        placeholder="Digite qualquer termo..."
+    )
+
+with col2:
+    pesquisar = st.button("🔎 Pesquisar", use_container_width=True)
+
+with col3:
+    limpar = st.button("🧹 Limpar", use_container_width=True)
+
+# =========================
+# LIMPAR
+# =========================
+if limpar:
+    st.session_state.busca = ""
+    st.rerun()
+
+# =========================
+# PESQUISA
+# =========================
+if pesquisar and busca:
+    st.session_state.busca = busca
+
+    if busca not in st.session_state.historico:
+        st.session_state.historico.append(busca)
+
+    resultados = [
+        c for c in caminhos
+        if busca.lower() in c.lower()
+    ]
+
+    st.success(f"{len(resultados)} resultado(s) encontrado(s)")
+
+    if not resultados:
+        st.warning("Nenhum arquivo encontrado.")
 
     # =========================
-    # HISTÓRICO
+    # RESULTADOS
     # =========================
-    if st.session_state.historico:
-        st.markdown("### 🕘 Histórico de buscas")
-
-        colh1, colh2 = st.columns([6, 1])
-
-        with colh2:
-            if st.button("🗑️ Limpar histórico"):
-                st.session_state.historico = []
-                st.rerun()
+    for caminho in resultados:
+        nome_arquivo = caminho.split("\\")[-1]
 
         st.markdown(
-            "".join(
-                f"<span class='tag'>{h}</span>"
-                for h in st.session_state.historico[::-1][:12]
-            ),
+            f"""
+            <div class="card"
+                title="📁 {caminho}"
+                onclick="navigator.clipboard.writeText('{caminho}')">
+
+                <div class="file-text">📄 {nome_arquivo}</div>
+
+            </div>
+            """,
             unsafe_allow_html=True
         )
+
+# =========================
+# HISTÓRICO
+# =========================
+if st.session_state.historico:
+    st.markdown("### 🕘 Histórico de buscas")
+
+    colh1, colh2 = st.columns([6, 1])
+
+    with colh2:
+        if st.button("🗑️ Limpar histórico"):
+            st.session_state.historico = []
+            st.rerun()
+
+    st.markdown(
+        "".join(
+            f"<span class='tag'>{h}</span>"
+            for h in st.session_state.historico[::-1][:12]
+        ),
+        unsafe_allow_html=True
+    )
 
 # =========================
 # FOOTER
