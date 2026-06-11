@@ -196,13 +196,18 @@ if st.session_state.historico:
             st.session_state.historico = []
             st.rerun()
 
-    st.markdown(
-        "".join(
-            f"<span class='tag'>{h}</span>"
-            for h in st.session_state.historico[::-1][:12]
-        ),
-        unsafe_allow_html=True
-    )
+   st.markdown(
+    f"""
+    <div class="card"
+        title="📁 {caminho}"
+        onclick="navigator.clipboard.writeText('{caminho}')">
+
+        <div class="file-text">📄 {nome_arquivo}</div>
+
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # =========================
 # FOOTER
