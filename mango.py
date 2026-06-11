@@ -3,9 +3,9 @@ import re
 
 st.set_page_config(page_title="YouTube no Streamlit", layout="wide")
 
-st.title("▶️ YouTube dentro do Streamlit")
+st.title("xxx")
 
-url = st.text_input("Cole o link do YouTube:")
+url = st.text_input("xxx:")
 
 def pegar_id_youtube(url):
     padroes = [
