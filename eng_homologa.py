@@ -266,7 +266,76 @@ for linha in range(0, len(meses_com_dados), 3):
             st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# TABELA
+# TABELA COM FILTROS
 # =========================
 st.subheader(tabela_txt)
-st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
+
+# Filtros da tabela
+with st.expander("🔍 Filtrar tabela" if lang == "PT" else "🔍 Filter table", expanded=False):
+
+    col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+
+    with col_f1:
+        filtro_data = st.multiselect(
+            "Data",
+            options=sorted(df_filtro["Data"].dt.strftime("%d/%m/%Y").unique())
+        )
+
+    with col_f2:
+        filtro_mes = st.multiselect(
+            "Mês" if lang == "PT" else "Month",
+            options=sorted(df_filtro["Mês"].dropna().unique())
+        )
+
+    with col_f3:
+        filtro_disciplina = st.multiselect(
+            disciplina_txt,
+            options=sorted(df_filtro["Disciplina"].dropna().unique())
+        )
+
+    with col_f4:
+        filtro_tipo = st.multiselect(
+            tipo_txt,
+            options=sorted(df_filtro["TipoDocumento"].dropna().unique())
+        )
+
+    filtro_registro = st.text_input(
+        "Registro" if lang == "PT" else "Record"
+    )
+
+# Aplicação dos filtros
+df_tabela = df_filtro.copy()
+
+if filtro_data:
+    df_tabela = df_tabela[
+        df_tabela["Data"].dt.strftime("%d/%m/%Y").isin(filtro_data)
+    ]
+
+if filtro_mes:
+    df_tabela = df_tabela[
+        df_tabela["Mês"].isin(filtro_mes)
+    ]
+
+if filtro_disciplina:
+    df_tabela = df_tabela[
+        df_tabela["Disciplina"].isin(filtro_disciplina)
+    ]
+
+if filtro_tipo:
+    df_tabela = df_tabela[
+        df_tabela["TipoDocumento"].isin(filtro_tipo)
+    ]
+
+if filtro_registro:
+    df_tabela = df_tabela[
+        df_tabela["Registro"].astype(str).str.contains(
+            filtro_registro,
+            case=False,
+            na=False
+        )
+    ]
+
+st.dataframe(
+    df_tabela.sort_values("Data"),
+    use_container_width=True
+)
