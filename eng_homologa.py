@@ -270,24 +270,20 @@ for linha in range(0, len(meses_com_dados), 3):
 # =========================
 st.subheader(tabela_txt)
 
-df_tabela = df_filtro.sort_values("Data").copy()
+df_tabela = df_filtro.sort_values("Data")
 
 gb = GridOptionsBuilder.from_dataframe(df_tabela)
 
 gb.configure_default_column(
-    sortable=True,
     filter=True,
+    sortable=True,
     floatingFilter=True,
     resizable=True
 )
 
-gridOptions = gb.build()
-
 AgGrid(
     df_tabela,
-    gridOptions=gridOptions,
-    enable_enterprise_modules=False,
-    fit_columns_on_grid_load=True,
+    gridOptions=gb.build(),
     height=500,
     theme="streamlit"
 )
