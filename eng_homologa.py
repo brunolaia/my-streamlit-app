@@ -8,7 +8,7 @@ from datetime import datetime
 # =========================
 # CONFIGURAÇÃO
 # =========================
-st.set_page_config(page_title="Dashboard Engenharia - Homologação", layout="wide")
+st.set_page_config(page_title="Dashboard Engenharia - CEDOC", layout="wide")
 
 # =========================
 # CONTROLE DE IDIOMA
@@ -58,7 +58,7 @@ sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 # TEXTOS DINÂMICOS
 # =========================
 if lang == "PT":
-    titulo = "📊 Dashboard - Engenharia NPO - CEDOC - 7"
+    titulo = "📊 Dashboard - Engenharia NPO - CEDOC"
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
     disciplina_txt = "Disciplina"
