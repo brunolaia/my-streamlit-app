@@ -1,3 +1,249 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import time
+import requests
+from datetime import datetime
+
+# =========================
+# CONFIGURAÇÃO
+# =========================
+st.set_page_config(page_title="Dashboard Engenharia - CEDOC", layout="wide")
+
+# =========================
+# CONTROLE DE IDIOMA
+# =========================
+if "lang" not in st.session_state:
+    st.session_state.lang = "PT"
+
+# =========================
+# FUNÇÃO DATA GITHUB (CORRIGIDA)
+# =========================
+def get_github_file_date():
+    try:
+        api_url = "https://api.github.com/repos/brunolaia/my-streamlit-app/commits?path=BD_ENG.xlsx&page=1&per_page=1"
+        r = requests.get(api_url)
+
+        if r.status_code == 200:
+            data = r.json()
+            date_str = data[0]["commit"]["committer"]["date"]
+            return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+    except:
+        pass
+    return None
+
+# =========================
+# MENU LATERAL
+# =========================
+st.sidebar.header("MENU")
+
+col_pt, col_en = st.sidebar.columns(2)
+
+with col_pt:
+    if st.button("🇧🇷 Português", key="pt"):
+        st.session_state.lang = "PT"
+
+with col_en:
+    if st.button("🇸🇬 English", key="en"):
+        st.session_state.lang = "EN"
+
+lang = st.session_state.lang
+
+
+# =========================
+# MENU ÁREA
+# =========================
+if lang == "PT":
+    area = st.sidebar.selectbox(
+        "📁 TIPO DOCUMENTO",
+        ["ENGENHARIA", "ADP"]
+    )
+else:
+    area = st.sidebar.selectbox(
+        "📁 DOCUMENT TYPE",
+        ["ENGINEERING", "ADP"]
+    )
+
+# =========================
+# DEFINIR PLANILHA
+# =========================
+if area in ["ENGENHARIA", "ENGINEERING"]:
+    sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
+else:
+    sheet_excel = "ADP_PT" if lang == "PT" else "ADP_EN"
+
+
+# =========================
+# TEXTOS DINÂMICOS
+# =========================
+
+if lang == "PT":
+
+    if area == "ENGENHARIA":
+        titulo = "📊 Dashboard - Engenharia NPO"
+    else:
+        titulo = "📊 Dashboard - ADP"
+
+    dev = "Desenvolvido por Bruno Laia"
+    filtros_txt = "Filtros"
+    disciplina_txt = "Disciplina"
+    ano_txt = "Ano"
+    tipo_txt = "Tipo de Documento"
+    resumo_txt = "📈 Resumo"
+    total_txt = "Total"
+    disciplinas_txt = "Disciplinas"
+    tipos_txt = "Tipos"
+    grafico_txt = "📊 Registros por Mês e Semana"
+    tabela_txt = "📋 Dados detalhados"
+    loading_txt = "📥 Carregando base de dados..."
+    todos_txt = "TODOS"
+
+    meses = {
+        1: "JANEIRO",
+        2: "FEVEREIRO",
+        3: "MARÇO",
+        4: "ABRIL",
+        5: "MAIO",
+        6: "JUNHO",
+        7: "JULHO",
+        8: "AGOSTO",
+        9: "SETEMBRO",
+        10: "OUTUBRO",
+        11: "NOVEMBRO",
+        12: "DEZEMBRO"
+    }
+
+else:
+
+    if area == "ENGINEERING":
+        titulo = "📊 Engineering Dashboard"
+    else:
+        titulo = "📊 ADP Dashboard"
+
+    dev = "Developed by Bruno Laia"
+    filtros_txt = "Filters"
+    disciplina_txt = "Discipline"
+    ano_txt = "Year"
+    tipo_txt = "Document Type"
+    resumo_txt = "📈 Summary"
+    total_txt = "Total"
+    disciplinas_txt = "Disciplines"
+    tipos_txt = "Types"
+    grafico_txt = "📊 Records by Month and Week"
+    tabela_txt = "📋 Detailed Data"
+    loading_txt = "📥 Loading database..."
+    todos_txt = "ALL"
+
+    meses = {
+        1: "JANUARY",
+        2: "FEBRUARY",
+        3: "MARCH",
+        4: "APRIL",
+        5: "MAY",
+        6: "JUNE",
+        7: "JULY",
+        8: "AUGUST",
+        9: "SEPTEMBER",
+        10: "OCTOBER",
+        11: "NOVEMBER",
+        12: "DECEMBER"
+    }
+
+# =========================
+# TÍTULO
+# =========================
+st.title(titulo)
+
+# =========================
+# LEITURA
+# =========================
+url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
+
+progress_bar = st.progress(0)
+
+with st.spinner(loading_txt):
+
+    for i in range(40):
+        time.sleep(0.01)
+        progress_bar.progress(i + 1)
+
+    df = pd.read_excel(url, sheet_name=sheet_excel, engine="openpyxl")
+
+    for i in range(40, 100):
+        time.sleep(0.005)
+        progress_bar.progress(i + 1)
+
+progress_bar.empty()
+
+# =========================
+# TRATAMENTO
+# =========================
+df = df.iloc[:, :4]
+df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento"]
+
+df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
+df = df.dropna(subset=["Data"])
+
+df["Ano"] = df["Data"].dt.year
+df["MesNum"] = df["Data"].dt.month
+df["Dia"] = df["Data"].dt.day
+df["Mês"] = df["MesNum"].map(meses)
+
+df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
+df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
+
+# =========================
+# DATA DO EXCEL (CORRIGIDO)
+# =========================
+file_date = get_github_file_date()
+
+if file_date:
+    if lang == "PT":
+        data_formatada = file_date.strftime("%d/%m/%Y")
+        st.success(f"✅ Dados carregados com sucesso - Atualizado em {data_formatada}")
+    else:
+        data_formatada = file_date.strftime("%m/%d/%Y")
+        st.success(f"✅ Data loaded successfully - Updated on {data_formatada}")
+else:
+    st.success("✅ Dados carregados com sucesso")
+
+# =========================
+# FILTROS
+# =========================
+st.sidebar.subheader(filtros_txt)
+
+lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
+lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
+lista_ano = [todos_txt] + sorted(df["Ano"].unique())
+
+disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
+tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
+ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
+
+# =========================
+# FILTRO
+# =========================
+df_filtro = df.copy()
+
+if disciplina != todos_txt:
+    df_filtro = df_filtro[df_filtro["Disciplina"] == disciplina]
+
+if tipo_doc != todos_txt:
+    df_filtro = df_filtro[df_filtro["TipoDocumento"] == tipo_doc]
+
+if ano != todos_txt:
+    df_filtro = df_filtro[df_filtro["Ano"] == ano]
+
+# =========================
+# RESUMO
+# =========================
+st.subheader(resumo_txt)
+col1, col2, col3, col4 = st.columns(4)
+col1.metric(total_txt, len(df_filtro))
+col2.metric(disciplinas_txt, disciplina)
+col3.metric(tipos_txt, tipo_doc)
+col4.metric(ano_txt, ano)
+
 # =========================
 # TOTAL
 # =========================
