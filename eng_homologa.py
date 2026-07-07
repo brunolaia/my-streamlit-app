@@ -266,68 +266,7 @@ for linha in range(0, len(meses_com_dados), 3):
             st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# TABELA COM FILTROS
+# TABELA
 # =========================
 st.subheader(tabela_txt)
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    filtro_data = st.selectbox(
-        "Data",
-        ["TODAS"] + sorted(
-            df_filtro["Data"].dt.strftime("%d/%m/%Y").unique().tolist()
-        )
-    )
-
-with col2:
-    filtro_mes = st.selectbox(
-        "Mês" if lang == "PT" else "Month",
-        ["TODOS"] + sorted(
-            df_filtro["Mês"].dropna().unique().tolist()
-        )
-    )
-
-with col3:
-    filtro_disciplina = st.selectbox(
-        disciplina_txt,
-        ["TODOS"] + sorted(
-            df_filtro["Disciplina"].dropna().unique().tolist()
-        )
-    )
-
-with col4:
-    filtro_registro = st.text_input(
-        "Registro" if lang == "PT" else "Record"
-    )
-
-df_tabela = df_filtro.copy()
-
-if filtro_data != "TODAS":
-    df_tabela = df_tabela[
-        df_tabela["Data"].dt.strftime("%d/%m/%Y") == filtro_data
-    ]
-
-if filtro_mes != "TODOS":
-    df_tabela = df_tabela[
-        df_tabela["Mês"] == filtro_mes
-    ]
-
-if filtro_disciplina != "TODOS":
-    df_tabela = df_tabela[
-        df_tabela["Disciplina"] == filtro_disciplina
-    ]
-
-if filtro_registro:
-    df_tabela = df_tabela[
-        df_tabela["Registro"].astype(str).str.contains(
-            filtro_registro,
-            case=False,
-            na=False
-        )
-    ]
-
-st.dataframe(
-    df_tabela.sort_values("Data"),
-    use_container_width=True
-)
+st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
