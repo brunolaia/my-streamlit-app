@@ -153,6 +153,7 @@ else:
 # TÍTULO
 # =========================
 st.title(titulo)
+st.markdown(f"<p style='color:white; font-size:14px;'>{dev}</p>", unsafe_allow_html=True)
 
 # =========================
 # LEITURA
@@ -251,19 +252,14 @@ st.subheader(grafico_txt)
 
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
-
-meses_com_dados = [
-    m for m in ordem_meses
-    if not df_filtro[df_filtro["Mês"] == m].empty
-]
+meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == m].empty]
 
 for linha in range(0, len(meses_com_dados), 3):
-
     cols = st.columns(3)
 
     for idx, mes in enumerate(meses_com_dados[linha:linha+3]):
-
-        with colsdf_mes = df_filtro[df_filtro["Mês"] == mes]
+        with cols[idx]:
+            df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = df_mes.groupby("Semana").agg(
                 Quantidade=("Registro", "count"),
@@ -287,10 +283,7 @@ for linha in range(0, len(meses_com_dados), 3):
                 "SemanaNum": [999]
             })
 
-            semana_df = pd.concat(
-                [total_df, semana_df],
-                ignore_index=True
-            )
+            semana_df = pd.concat([total_df, semana_df], ignore_index=True)
 
             semana_df["Cor"] = semana_df["Semana"].apply(
                 lambda x: "TOTAL" if x == "Total" else "SEMANA"
@@ -315,16 +308,16 @@ for linha in range(0, len(meses_com_dados), 3):
             )
 
             fig.update_layout(
-                title={
-                    "text": f"📅 {mes}",
-                    "x": 0.5
-                },
+                title={"text": f"📅 {mes}", "x": 0.5},
                 height=320,
                 showlegend=False,
                 hovermode="x unified"
             )
 
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
+            st.plotly_chart(fig, use_container_width=True)
+
+# =========================
+# TABELA
+# =========================
+st.subheader(tabela_txt)
+st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
