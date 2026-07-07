@@ -117,14 +117,21 @@ with st.spinner(loading_txt):
         time.sleep(0.01)
         progress_bar.progress(i + 1)
 
-    df = pd.read_excel(url, sheet_name=sheet_excel, engine="openpyxl")
+    try:
+        df = pd.read_excel(
+            url,
+            sheet_name=sheet_excel,
+            engine="openpyxl"
+        )
+    except Exception as e:
+        st.error(f"Erro ao abrir a aba '{sheet_excel}': {e}")
+        st.stop()
 
     for i in range(40, 100):
         time.sleep(0.005)
         progress_bar.progress(i + 1)
 
 progress_bar.empty()
-
 # =========================
 # TRATAMENTO
 # =========================
