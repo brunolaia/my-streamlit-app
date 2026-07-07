@@ -52,7 +52,7 @@ lang = st.session_state.lang
 # =========================
 # DEFINIR PLANILHA
 # =========================
-sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
+sheet_excel = "ENG_PT" if lang == "PT" else "ENG_EN"
 
 # =========================
 # TEXTOS DINÂMICOS
