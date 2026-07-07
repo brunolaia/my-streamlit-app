@@ -265,12 +265,6 @@ for linha in range(0, len(meses_com_dados), 3):
 
     for idx, mes in enumerate(meses_com_dados[linha:linha + 3]):
 
-        with cols[idx]:
-
-          df_mes = df_filtro[df_filtro["Mês"] == mes]
-
-            for idx, mes in enumerate(meses_com_dados[linha:linha + 3]):
-
     with colsdf_mes = df_filtro[df_filtro["Mês"] == mes]
 
         semana_df = df_mes.groupby("Semana").agg(
