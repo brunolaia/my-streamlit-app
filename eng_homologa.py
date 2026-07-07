@@ -250,7 +250,6 @@ col4.metric(ano_txt, ano)
 st.subheader(grafico_txt)
 
 cores = px.colors.qualitative.Set2
-
 ordem_meses = list(meses.values())
 
 meses_com_dados = [
@@ -258,13 +257,11 @@ meses_com_dados = [
     if not df_filtro[df_filtro["Mês"] == m].empty
 ]
 
-
-
 for linha in range(0, len(meses_com_dados), 3):
 
     cols = st.columns(3)
 
-    for idx, mes in enumerate(meses_com_dados[linha:linha + 3]):
+    for idx, mes in enumerate(meses_com_dados[linha:linha+3]):
 
         with colsdf_mes = df_filtro[df_filtro["Mês"] == mes]
 
@@ -272,7 +269,6 @@ for linha in range(0, len(meses_com_dados), 3):
                 Quantidade=("Registro", "count"),
                 Registros=("Registro", lambda x: "<br>".join(map(str, x)))
             ).reset_index()
-
 
             semana_df["SemanaNum"] = pd.to_numeric(
                 semana_df["Semana"].str.extract(r"(\d+)")[0],
@@ -319,7 +315,10 @@ for linha in range(0, len(meses_com_dados), 3):
             )
 
             fig.update_layout(
-                title={"text": f"📅 {mes}", "x": 0.5},
+                title={
+                    "text": f"📅 {mes}",
+                    "x": 0.5
+                },
                 height=320,
                 showlegend=False,
                 hovermode="x unified"
