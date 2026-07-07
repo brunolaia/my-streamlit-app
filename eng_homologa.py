@@ -49,6 +49,7 @@ with col_en:
 
 lang = st.session_state.lang
 
+
 # =========================
 # MENU ÁREA
 # =========================
@@ -66,20 +67,21 @@ else:
 # =========================
 # DEFINIR PLANILHA
 # =========================
-if area == "CEDOC":
+if area in ["ENGENHARIA", "ENGINEERING"]:
     sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
 else:
     sheet_excel = "ADP_PT" if lang == "PT" else "ADP_EN"
+
 # =========================
 # TEXTOS DINÂMICOS
 # =========================
 
 if lang == "PT":
 
-    if area == "CEDOC":
-        titulo = "📊 Dashboard - Engenharia NPO - CEDOC"
+    if area == "ENGENHARIA":
+        titulo = "📊 Dashboard - Engenharia NPO"
     else:
-        titulo = "📊 Dashboard - Engenharia NPO - ADP"
+        titulo = "📊 Dashboard - ADP"
 
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
@@ -108,6 +110,42 @@ if lang == "PT":
         10: "OUTUBRO",
         11: "NOVEMBRO",
         12: "DEZEMBRO"
+    }
+
+else:
+
+    if area == "ENGINEERING":
+        titulo = "📊 Engineering Dashboard"
+    else:
+        titulo = "📊 ADP Dashboard"
+
+    dev = "Developed by Bruno Laia"
+    filtros_txt = "Filters"
+    disciplina_txt = "Discipline"
+    ano_txt = "Year"
+    tipo_txt = "Document Type"
+    resumo_txt = "📈 Summary"
+    total_txt = "Total"
+    disciplinas_txt = "Disciplines"
+    tipos_txt = "Types"
+    grafico_txt = "📊 Records by Month and Week"
+    tabela_txt = "📋 Detailed Data"
+    loading_txt = "📥 Loading database..."
+    todos_txt = "ALL"
+
+    meses = {
+        1: "JANUARY",
+        2: "FEBRUARY",
+        3: "MARCH",
+        4: "APRIL",
+        5: "MAY",
+        6: "JUNE",
+        7: "JULY",
+        8: "AUGUST",
+        9: "SEPTEMBER",
+        10: "OCTOBER",
+        11: "NOVEMBER",
+        12: "DECEMBER"
     }
 
 else:
