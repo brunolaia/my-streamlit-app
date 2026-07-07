@@ -267,7 +267,7 @@ for linha in range(0, len(meses_com_dados), 3):
 
         with cols[idx]:
 
-            dffiltro["Mês"] == mes]
+          df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = df_mes.groupby("Semana").agg(
                 Quantidade=("Registro", "count"),
