@@ -72,6 +72,7 @@ if area in ["ENGENHARIA", "ENGINEERING"]:
 else:
     sheet_excel = "ADP_PT" if lang == "PT" else "ADP_EN"
 
+
 # =========================
 # TEXTOS DINÂMICOS
 # =========================
@@ -111,6 +112,43 @@ if lang == "PT":
         11: "NOVEMBRO",
         12: "DEZEMBRO"
     }
+
+else:
+
+    if area == "ENGINEERING":
+        titulo = "📊 Engineering Dashboard"
+    else:
+        titulo = "📊 ADP Dashboard"
+
+    dev = "Developed by Bruno Laia"
+    filtros_txt = "Filters"
+    disciplina_txt = "Discipline"
+    ano_txt = "Year"
+    tipo_txt = "Document Type"
+    resumo_txt = "📈 Summary"
+    total_txt = "Total"
+    disciplinas_txt = "Disciplines"
+    tipos_txt = "Types"
+    grafico_txt = "📊 Records by Month and Week"
+    tabela_txt = "📋 Detailed Data"
+    loading_txt = "📥 Loading database..."
+    todos_txt = "ALL"
+
+    meses = {
+        1: "JANUARY",
+        2: "FEBRUARY",
+        3: "MARCH",
+        4: "APRIL",
+        5: "MAY",
+        6: "JUNE",
+        7: "JULY",
+        8: "AUGUST",
+        9: "SEPTEMBER",
+        10: "OCTOBER",
+        11: "NOVEMBER",
+        12: "DECEMBER"
+    }
+
 
 else:
 
