@@ -259,6 +259,7 @@ meses_com_dados = [
 ]
 
 
+
 for linha in range(0, len(meses_com_dados), 3):
 
     cols = st.columns(3)
@@ -270,7 +271,8 @@ for linha in range(0, len(meses_com_dados), 3):
             semana_df = df_mes.groupby("Semana").agg(
                 Quantidade=("Registro", "count"),
                 Registros=("Registro", lambda x: "<br>".join(map(str, x)))
-            ).reset_index()
+            ).reset_ind
+
 
             semana_df["SemanaNum"] = pd.to_numeric(
                 semana_df["Semana"].str.extract(r"(\d+)")[0],
