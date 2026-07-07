@@ -258,20 +258,22 @@ meses_com_dados = [
     if not df_filtro[df_filtro["Mês"] == m].empty
 ]
 
+
 for linha in range(0, len(meses_com_dados), 3):
 
     cols = st.columns(3)
 
-    for idx, mes in enumerate(meses_com_dados[linha:linha+3]):
+    for idx, mes in enumerate(meses_com_dados[linha:linha + 3]):
 
         with cols[idx]:
 
-            df_mes = df_filtro mes]
+            dffiltro["Mês"] == mes]
 
             semana_df = df_mes.groupby("Semana").agg(
                 Quantidade=("Registro", "count"),
                 Registros=("Registro", lambda x: "<br>".join(map(str, x)))
             ).reset_index()
+
 
             semana_df["SemanaNum"] = pd.to_numeric(
                 semana_df["Semana"].str.extract(r"(\d+)")[0],
@@ -324,4 +326,7 @@ for linha in range(0, len(meses_com_dados), 3):
                 hovermode="x unified"
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
