@@ -54,13 +54,13 @@ lang = st.session_state.lang
 # =========================
 if lang == "PT":
     area = st.sidebar.selectbox(
-        "📁 Área",
-        ["CEDOC", "ADP"]
+        "📁 TIPO DOCUMENTO",
+        ["ENGENHARIA", "ADP"]
     )
 else:
     area = st.sidebar.selectbox(
-        "📁 Area",
-        ["CEDOC", "ADP"]
+        "📁 DOCUMENT TYPE",
+        ["ENGINEERING", "ADP"]
     )
 
 # =========================
