@@ -56,12 +56,12 @@ lang = st.session_state.lang
 if lang == "PT":
     area = st.sidebar.selectbox(
         "📁 TIPO DOCUMENTO",
-        ["ENGENHARIA", "ADP"]
+        ["ENGENHARIA", "ADP", "MTO", "TPS"]
     )
 else:
     area = st.sidebar.selectbox(
         "📁 DOCUMENT TYPE",
-        ["ENGINEERING", "ADP"]
+        ["ENGINEERING", "ADP", "MTO", "TPS"]
     )
 
 # =========================
@@ -69,20 +69,34 @@ else:
 # =========================
 if area in ["ENGENHARIA", "ENGINEERING"]:
     sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
-else:
+
+elif area == "ADP":
     sheet_excel = "ADP_PT" if lang == "PT" else "ADP_EN"
 
+elif area == "MTO":
+    sheet_excel = "MTO_PT" if lang == "PT" else "MTO_EN"
+
+elif area == "TPS":
+    sheet_excel = "TPS_PT" if lang == "PT" else "TPS_EN"
 
 # =========================
 # TEXTOS DINÂMICOS
 # =========================
 
+
 if lang == "PT":
 
     if area == "ENGENHARIA":
         titulo = "📊 Dashboard - Engenharia NPO"
-    else:
+
+    elif area == "ADP":
         titulo = "📊 Dashboard - ADP"
+
+    elif area == "MTO":
+        titulo = "📊 Dashboard - MTO"
+
+    elif area == "TPS":
+        titulo = "📊 Dashboard - TPS"
 
     dev = "Desenvolvido por Bruno Laia"
     filtros_txt = "Filtros"
@@ -115,10 +129,19 @@ if lang == "PT":
 
 else:
 
+    else:
+
     if area == "ENGINEERING":
         titulo = "📊 Engineering Dashboard"
-    else:
+
+    elif area == "ADP":
         titulo = "📊 ADP Dashboard"
+
+    elif area == "MTO":
+        titulo = "📊 MTO Dashboard"
+
+    elif area == "TPS":
+        titulo = "📊 TPS Dashboard"
 
     dev = "Developed by Bruno Laia"
     filtros_txt = "Filters"
