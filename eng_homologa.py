@@ -129,8 +129,6 @@ if lang == "PT":
 
 else:
 
-    else:
-
     if area == "ENGINEERING":
         titulo = "📊 Engineering Dashboard"
 
