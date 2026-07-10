@@ -284,22 +284,15 @@ df["Semana"] = ("SEMANA " if lang == "PT" else "WEEK ") + df["SemanaNum"].astype
 file_date = get_github_file_date()
 
 if file_date:
-
-    if lang == "PT":
-        data_formatada = file_date.strftime("%d/%m/%Y")
-        st.success(f"✅ Dados carregados com sucesso - {data_formatada}")
-
-    else:
-        data_formatada = file_date.strftime("%m/%d/%Y")
-        st.success(f"✅ Data loaded successfully - {data_formatada}")
-
+    data_formatada = file_date.strftime("%d/%m/%Y")
 else:
+    data_formatada = datetime.now().strftime("%d/%m/%Y")
 
-    if lang == "PT":
-        st.warning("⚠️ Dados carregados com sucesso, mas não foi possível obter a data do último upload do BD_ENG.xlsx.")
-
-    else:
-        st.warning("⚠️ Data loaded successfully, but it was not possible to retrieve the last upload date of BD_ENG.xlsx.")
+if lang == "PT":
+    st.success(f"✅ Dados carregados com sucesso - {data_formatada}")
+else:
+    data_formatada_en = file_date.strftime("%m/%d/%Y") if file_date else datetime.now().strftime("%m/%d/%Y")
+    st.success(f"✅ Data loaded successfully - {data_formatada_en}")
 # =========================
 # FILTROS
 # =========================
