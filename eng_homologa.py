@@ -15,18 +15,20 @@ st.set_page_config(page_title="Dashboard Engenharia - CEDOC", layout="wide")
 # =========================
 st.markdown("""
 <style>
-section[data-testid="stSidebar"] .stSelectbox,
-section[data-testid="stSidebar"] .stRadio,
-section[data-testid="stSidebar"] .stButton {
-    margin-bottom: -10px;
+section[data-testid="stSidebar"] {
+    overflow-y: auto;
 }
 
 section[data-testid="stSidebar"] label {
     font-size: 13px !important;
 }
 
-section[data-testid="stSidebar"] {
-    overflow-y: auto;
+section[data-testid="stSidebar"] .stSelectbox {
+    margin-bottom: -8px;
+}
+
+section[data-testid="stSidebar"] .stRadio {
+    margin-bottom: -8px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -38,7 +40,7 @@ if "lang" not in st.session_state:
     st.session_state.lang = "PT"
 
 # =========================
-# DATA ÚLTIMO UPLOAD GITHUB
+# FUNÇÃO DATA GITHUB
 # =========================
 def get_github_file_date():
     try:
@@ -91,13 +93,10 @@ else:
 # =========================
 if area in ["ENGENHARIA", "ENGINEERING"]:
     sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
-
 elif area == "ADP":
     sheet_excel = "ADP_PT" if lang == "PT" else "ADP_EN"
-
 elif area == "MTO":
     sheet_excel = "MTO_PT" if lang == "PT" else "MTO_EN"
-
 elif area == "TPS":
     sheet_excel = "TPS_PT" if lang == "PT" else "TPS_EN"
 
