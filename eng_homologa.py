@@ -11,18 +11,39 @@ from datetime import datetime
 st.set_page_config(page_title="Dashboard Engenharia - CEDOC", layout="wide")
 
 # =========================
+# AJUSTE MENU LATERAL
+# =========================
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] .stSelectbox,
+section[data-testid="stSidebar"] .stRadio,
+section[data-testid="stSidebar"] .stButton {
+    margin-bottom: -10px;
+}
+
+section[data-testid="stSidebar"] label {
+    font-size: 13px !important;
+}
+
+section[data-testid="stSidebar"] {
+    overflow-y: auto;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# =========================
 # CONTROLE DE IDIOMA
 # =========================
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
 
 # =========================
-# FUNÇÃO DATA GITHUB
+# DATA ÚLTIMO UPLOAD GITHUB
 # =========================
 def get_github_file_date():
     try:
         api_url = "https://api.github.com/repos/brunolaia/my-streamlit-app/commits?path=BD_ENG.xlsx&page=1&per_page=1"
-        r = requests.get(api_url)
+        r = requests.get(api_url, timeout=10)
 
         if r.status_code == 200:
             data = r.json()
@@ -42,11 +63,11 @@ st.sidebar.header("MENU")
 col_pt, col_en = st.sidebar.columns(2)
 
 with col_pt:
-    if st.button("🇧🇷 Português", key="pt"):
+    if st.button("🇧🇷 PT", key="pt"):
         st.session_state.lang = "PT"
 
 with col_en:
-    if st.button("🇸🇬 English", key="en"):
+    if st.button("🇸🇬 EN", key="en"):
         st.session_state.lang = "EN"
 
 lang = st.session_state.lang
@@ -108,6 +129,10 @@ if lang == "PT":
     loading_txt = "📥 Carregando base de dados..."
     todos_txt = "TODOS"
     status_adp_txt = "✅ Status de aprovação da ADP"
+    qtd_label = "Quantidade"
+    registros_label = "Registros"
+    sucesso_txt = "✅ Dados carregados com sucesso"
+    nenhum_status_txt = "Nenhum status encontrado para ADP."
 
     meses = {
         1: "JANEIRO",
@@ -149,6 +174,10 @@ else:
     loading_txt = "📥 Loading database..."
     todos_txt = "ALL"
     status_adp_txt = "✅ ADP Approval Status"
+    qtd_label = "Quantity"
+    registros_label = "Records"
+    sucesso_txt = "✅ Data loaded successfully"
+    nenhum_status_txt = "No ADP approval status found."
 
     meses = {
         1: "JANUARY",
@@ -219,17 +248,10 @@ df["Semana"] = ("SEMANA " if lang == "PT" else "WEEK ") + df["SemanaNum"].astype
 file_date = get_github_file_date()
 
 if file_date:
-    if lang == "PT":
-        data_formatada = file_date.strftime("%d/%m/%Y")
-        st.success(f"✅ Dados carregados com sucesso - Atualizado em {data_formatada}")
-    else:
-        data_formatada = file_date.strftime("%m/%d/%Y")
-        st.success(f"✅ Data loaded successfully - Updated on {data_formatada}")
+    data_formatada = file_date.strftime("%d/%m/%Y")
+    st.success(f"{sucesso_txt} - {data_formatada}")
 else:
-    if lang == "PT":
-        st.success("✅ Dados carregados com sucesso")
-    else:
-        st.success("✅ Data loaded successfully")
+    st.success(sucesso_txt)
 
 # =========================
 # FILTROS
@@ -240,9 +262,14 @@ lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 lista_ano = [todos_txt] + sorted(df["Ano"].dropna().unique())
 
+ano = st.sidebar.radio(
+    f"📅 {ano_txt}",
+    lista_ano,
+    horizontal=True
+)
+
 disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
 tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
-ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
 
 # =========================
 # FILTRO
@@ -297,10 +324,6 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                 "APR. C/ RNC"
             ]
 
-            qtd_label = "Quantidade"
-            registros_label = "Registros"
-            nenhum_status_txt = "Nenhum status encontrado para ADP."
-
         else:
             status_map = {
                 "APPROVED": "APPROVED",
@@ -320,10 +343,6 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                 "NOT APPROVED",
                 "APPROVED W/ RNC"
             ]
-
-            qtd_label = "Quantity"
-            registros_label = "Records"
-            nenhum_status_txt = "No ADP approval status found."
 
         df_status["StatusADP"] = (
             df_status["StatusADP"]
@@ -485,8 +504,9 @@ for linha in range(0, len(meses_com_dados), 3):
                 textposition="outside",
                 hovertemplate=(
                     "<b>%{x}</b><br>"
-                    f"{qtd_label if area == 'ADP' else ('Quantidade' if lang == 'PT' else 'Quantity')}: "
+                    f"{qtd_label}: "
                     "%{y}<br><br>"
+                    f"<b>{registros_label}:</b><br>"
                     "%{customdata[0]}"
                     "<extra></extra>"
                 ),
