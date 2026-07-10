@@ -361,6 +361,7 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                 "NOT APPROVED": "NOT APPROVED",
                 "APPROVED W/ RNC": "APPROVED W/ RNC",
                 "APPROVED WITH RNC": "APPROVED W/ RNC",
+                "APPROVED C/ RNC": "APPROVED W/ RNC",
                 "APR. C/ RNC": "APPROVED W/ RNC",
                 "APROVADO": "APPROVED",
                 "NÃO APROVADO": "NOT APPROVED",
