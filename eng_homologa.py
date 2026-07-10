@@ -244,8 +244,14 @@ progress_bar.empty()
 # TRATAMENTO
 # =========================
 if area == "ADP":
+
+    # Garante que existam pelo menos 5 colunas, mesmo se a aba ADP_EN vier com menos colunas
+    while df.shape[1] < 5:
+        df[f"ColunaExtra{df.shape[1] + 1}"] = ""
+
     df = df.iloc[:, :5]
     df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento", "StatusADP"]
+
 else:
     df = df.iloc[:, :4]
     df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento"]
