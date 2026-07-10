@@ -91,14 +91,34 @@ else:
 # =========================
 # DEFINIR PLANILHA
 # =========================
-if area in ["ENGENHARIA", "ENGINEERING"]:
-    sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
-elif area == "ADP":
-    sheet_excel = "ADP_PT" if lang == "PT" else "ADP_EN"
-elif area == "MTO":
-    sheet_excel = "MTO_PT" if lang == "PT" else "MTO_EN"
-elif area == "TPS":
-    sheet_excel = "TPS_PT" if lang == "PT" else "TPS_EN"
+
+if lang == "PT":
+
+    if area == "ENGENHARIA":
+        sheet_excel = "Planilha1"
+
+    elif area == "ADP":
+        sheet_excel = "ADP_PT"
+
+    elif area == "MTO":
+        sheet_excel = "MTO_PT"
+
+    elif area == "TPS":
+        sheet_excel = "TPS_PT"
+
+else:
+
+    if area == "ENGINEERING":
+        sheet_excel = "Planilha2"
+
+    elif area == "ADP":
+        sheet_excel = "ADP_EN"
+
+    elif area == "MTO":
+        sheet_excel = "MTO_EN"
+
+    elif area == "TPS":
+        sheet_excel = "TPS_EN"
 
 # =========================
 # TEXTOS DINÂMICOS
