@@ -287,8 +287,16 @@ if file_date:
         st.success(f"✅ Dados carregados com sucesso - {data_formatada}")
 
     else:
-        data_formatada = file_date.strftime("%m/%d/%Y")
+        data_formatada = file_date.strftime("%B %d, %Y")
         st.success(f"✅ Data loaded successfully - {data_formatada}")
+
+else:
+
+    if lang == "PT":
+        st.warning("⚠️ Dados carregados com sucesso, mas não foi possível obter a data do último upload do BD_ENG.xlsx.")
+
+    else:
+        st.warning("⚠️ Data loaded successfully, but it was not possible to retrieve the last upload date of BD_ENG.xlsx.")
 
 # =========================
 # FILTROS
