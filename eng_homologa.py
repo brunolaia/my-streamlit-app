@@ -17,7 +17,7 @@ if "lang" not in st.session_state:
     st.session_state.lang = "PT"
 
 # =========================
-# FUNÇÃO DATA GITHUB (CORRIGIDA)
+# FUNÇÃO DATA GITHUB
 # =========================
 def get_github_file_date():
     try:
@@ -26,10 +26,12 @@ def get_github_file_date():
 
         if r.status_code == 200:
             data = r.json()
-            date_str = data[0]["commit"]["committer"]["date"]
-            return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+            if data:
+                date_str = data[0]["commit"]["committer"]["date"]
+                return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
     except:
         pass
+
     return None
 
 # =========================
@@ -48,7 +50,6 @@ with col_en:
         st.session_state.lang = "EN"
 
 lang = st.session_state.lang
-
 
 # =========================
 # MENU ÁREA
@@ -82,19 +83,14 @@ elif area == "TPS":
 # =========================
 # TEXTOS DINÂMICOS
 # =========================
-
-
 if lang == "PT":
 
     if area == "ENGENHARIA":
         titulo = "📊 Dashboard - Engenharia NPO"
-
     elif area == "ADP":
         titulo = "📊 Dashboard - ADP"
-
     elif area == "MTO":
         titulo = "📊 Dashboard - MTO"
-
     elif area == "TPS":
         titulo = "📊 Dashboard - TPS"
 
@@ -111,6 +107,7 @@ if lang == "PT":
     tabela_txt = "📋 Dados detalhados"
     loading_txt = "📥 Carregando base de dados..."
     todos_txt = "TODOS"
+    status_adp_txt = "✅ Status de aprovação da ADP"
 
     meses = {
         1: "JANEIRO",
@@ -131,13 +128,10 @@ else:
 
     if area == "ENGINEERING":
         titulo = "📊 Engineering Dashboard"
-
     elif area == "ADP":
         titulo = "📊 ADP Dashboard"
-
     elif area == "MTO":
         titulo = "📊 MTO Dashboard"
-
     elif area == "TPS":
         titulo = "📊 TPS Dashboard"
 
@@ -154,6 +148,7 @@ else:
     tabela_txt = "📋 Detailed Data"
     loading_txt = "📥 Loading database..."
     todos_txt = "ALL"
+    status_adp_txt = "✅ ADP Approval Status"
 
     meses = {
         1: "JANUARY",
@@ -200,8 +195,12 @@ progress_bar.empty()
 # =========================
 # TRATAMENTO
 # =========================
-df = df.iloc[:, :4]
-df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento"]
+if area == "ADP":
+    df = df.iloc[:, :5]
+    df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento", "StatusADP"]
+else:
+    df = df.iloc[:, :4]
+    df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento"]
 
 df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
 df = df.dropna(subset=["Data"])
@@ -212,10 +211,10 @@ df["Dia"] = df["Data"].dt.day
 df["Mês"] = df["MesNum"].map(meses)
 
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
-df["Semana"] = ("SEMANA " if lang=="PT" else "WEEK ") + df["SemanaNum"].astype(str)
+df["Semana"] = ("SEMANA " if lang == "PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
 # =========================
-# DATA DO EXCEL (CORRIGIDO)
+# DATA DO EXCEL
 # =========================
 file_date = get_github_file_date()
 
@@ -236,7 +235,7 @@ st.sidebar.subheader(filtros_txt)
 
 lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
-lista_ano = [todos_txt] + sorted(df["Ano"].unique())
+lista_ano = [todos_txt] + sorted(df["Ano"].dropna().unique())
 
 disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
 tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
@@ -260,14 +259,72 @@ if ano != todos_txt:
 # RESUMO
 # =========================
 st.subheader(resumo_txt)
+
 col1, col2, col3, col4 = st.columns(4)
+
 col1.metric(total_txt, len(df_filtro))
 col2.metric(disciplinas_txt, disciplina)
 col3.metric(tipos_txt, tipo_doc)
 col4.metric(ano_txt, ano)
 
 # =========================
-# GRÁFICOS
+# GRÁFICO STATUS ADP
+# =========================
+if area == "ADP" and "StatusADP" in df_filtro.columns:
+
+    st.subheader(status_adp_txt)
+
+    df_status = df_filtro.dropna(subset=["StatusADP"]).copy()
+
+    if not df_status.empty:
+
+        df_status["DataGrafico"] = df_status["Data"].dt.strftime("%d/%m/%Y")
+
+        status_df = df_status.groupby(["DataGrafico", "StatusADP"]).agg(
+            Quantidade=("Registro", "count"),
+            Registros=("Registro", lambda x: "<br>".join(map(str, x)))
+        ).reset_index()
+
+        fig_status = px.bar(
+            status_df,
+            x="DataGrafico",
+            y="Quantidade",
+            color="StatusADP",
+            text="Quantidade",
+            custom_data=["Registros"],
+            barmode="group"
+        )
+
+        fig_status.update_traces(
+            textposition="outside",
+            hovertemplate=(
+                "<b>%{x}</b><br>"
+                "Quantidade: %{y}<br><br>"
+                "%{customdata[0]}"
+                "<extra></extra>"
+            ),
+            hoverlabel=dict(align="left")
+        )
+
+        fig_status.update_layout(
+            height=420,
+            showlegend=True,
+            hovermode="x unified",
+            xaxis_title="Data" if lang == "PT" else "Date",
+            yaxis_title="Quantidade" if lang == "PT" else "Quantity",
+            legend_title_text="Status"
+        )
+
+        st.plotly_chart(fig_status, use_container_width=True)
+
+    else:
+        if lang == "PT":
+            st.info("Nenhum status encontrado para ADP.")
+        else:
+            st.info("No ADP status found.")
+
+# =========================
+# GRÁFICOS POR MÊS E SEMANA
 # =========================
 st.subheader(grafico_txt)
 
@@ -278,8 +335,9 @@ meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == 
 for linha in range(0, len(meses_com_dados), 3):
     cols = st.columns(3)
 
-    for idx, mes in enumerate(meses_com_dados[linha:linha+3]):
+    for idx, mes in enumerate(meses_com_dados[linha:linha + 3]):
         with cols[idx]:
+
             df_mes = df_filtro[df_filtro["Mês"] == mes]
 
             semana_df = df_mes.groupby("Semana").agg(
@@ -324,7 +382,13 @@ for linha in range(0, len(meses_com_dados), 3):
             )
 
             fig.update_traces(
-                hovertemplate="<b>%{x}</b><br>Quantidade: %{y}<br><br>%{customdata[0]}<extra></extra>",
+                textposition="outside",
+                hovertemplate=(
+                    "<b>%{x}</b><br>"
+                    "Quantidade: %{y}<br><br>"
+                    "%{customdata[0]}"
+                    "<extra></extra>"
+                ),
                 hoverlabel=dict(align="left")
             )
 
