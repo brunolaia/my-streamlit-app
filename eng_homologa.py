@@ -5,20 +5,11 @@ import time
 import requests
 from datetime import datetime
 
-# =========================
-# CONFIGURAÇÃO
-# =========================
 st.set_page_config(page_title="Dashboard Engenharia - CEDOC", layout="wide")
 
-# =========================
-# CONTROLE DE IDIOMA
-# =========================
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
 
-# =========================
-# FUNÇÃO DATA GITHUB
-# =========================
 def get_github_file_date():
     try:
         api_url = "https://api.github.com/repos/brunolaia/my-streamlit-app/commits?path=BD_ENG.xlsx&page=1&per_page=1"
@@ -34,9 +25,6 @@ def get_github_file_date():
 
     return None
 
-# =========================
-# MENU LATERAL
-# =========================
 st.sidebar.header("MENU")
 
 col_pt, col_en = st.sidebar.columns(2)
@@ -51,9 +39,6 @@ with col_en:
 
 lang = st.session_state.lang
 
-# =========================
-# MENU ÁREA
-# =========================
 if lang == "PT":
     area = st.sidebar.selectbox(
         "📁 TIPO DOCUMENTO",
@@ -65,24 +50,15 @@ else:
         ["ENGINEERING", "ADP", "MTO", "TPS"]
     )
 
-# =========================
-# DEFINIR PLANILHA
-# =========================
 if area in ["ENGENHARIA", "ENGINEERING"]:
     sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
-
 elif area == "ADP":
     sheet_excel = "ADP_PT" if lang == "PT" else "ADP_EN"
-
 elif area == "MTO":
     sheet_excel = "MTO_PT" if lang == "PT" else "MTO_EN"
-
 elif area == "TPS":
     sheet_excel = "TPS_PT" if lang == "PT" else "TPS_EN"
 
-# =========================
-# TEXTOS DINÂMICOS
-# =========================
 if lang == "PT":
 
     if area == "ENGENHARIA":
@@ -165,15 +141,9 @@ else:
         12: "DECEMBER"
     }
 
-# =========================
-# TÍTULO
-# =========================
 st.title(titulo)
 st.markdown(f"<p style='color:white; font-size:14px;'>{dev}</p>", unsafe_allow_html=True)
 
-# =========================
-# LEITURA
-# =========================
 url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
 
 progress_bar = st.progress(0)
@@ -209,13 +179,11 @@ df["Ano"] = df["Data"].dt.year
 df["MesNum"] = df["Data"].dt.month
 df["Dia"] = df["Data"].dt.day
 df["Mês"] = df["MesNum"].map(meses)
+df["MesAno"] = df["Mês"] + " " + df["Ano"].astype(str)
 
 df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
 df["Semana"] = ("SEMANA " if lang == "PT" else "WEEK ") + df["SemanaNum"].astype(str)
 
-# =========================
-# DATA DO EXCEL
-# =========================
 file_date = get_github_file_date()
 
 if file_date:
@@ -228,9 +196,6 @@ if file_date:
 else:
     st.success("✅ Dados carregados com sucesso")
 
-# =========================
-# FILTROS
-# =========================
 st.sidebar.subheader(filtros_txt)
 
 lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
@@ -241,9 +206,6 @@ disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
 tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
 ano = st.sidebar.selectbox(f"📅 {ano_txt}", lista_ano)
 
-# =========================
-# FILTRO
-# =========================
 df_filtro = df.copy()
 
 if disciplina != todos_txt:
@@ -255,9 +217,6 @@ if tipo_doc != todos_txt:
 if ano != todos_txt:
     df_filtro = df_filtro[df_filtro["Ano"] == ano]
 
-# =========================
-# RESUMO
-# =========================
 st.subheader(resumo_txt)
 
 col1, col2, col3, col4 = st.columns(4)
@@ -268,7 +227,7 @@ col3.metric(tipos_txt, tipo_doc)
 col4.metric(ano_txt, ano)
 
 # =========================
-# GRÁFICO STATUS ADP
+# STATUS DE APROVAÇÃO DA ADP
 # =========================
 if area == "ADP" and "StatusADP" in df_filtro.columns:
 
@@ -278,28 +237,52 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
 
     if not df_status.empty:
 
-        df_status["DataGrafico"] = df_status["Data"].dt.strftime("%d/%m/%Y")
+        df_status["StatusADP"] = df_status["StatusADP"].astype(str).str.strip().str.upper()
 
-        status_df = df_status.groupby(["DataGrafico", "StatusADP"]).agg(
+        ordem_status = [
+            "APROVADO",
+            "NÃO APROVADO",
+            "APR. C/ RNC"
+        ]
+
+        df_status["StatusADP"] = pd.Categorical(
+            df_status["StatusADP"],
+            categories=ordem_status,
+            ordered=True
+        )
+
+        status_df = df_status.groupby(
+            ["Ano", "MesNum", "MesAno", "StatusADP"],
+            observed=False
+        ).agg(
             Quantidade=("Registro", "count"),
             Registros=("Registro", lambda x: "<br>".join(map(str, x)))
         ).reset_index()
 
+        status_df = status_df[status_df["Quantidade"] > 0]
+        status_df = status_df.sort_values(["Ano", "MesNum", "StatusADP"])
+
         fig_status = px.bar(
             status_df,
-            x="DataGrafico",
+            x="MesAno",
             y="Quantidade",
             color="StatusADP",
             text="Quantidade",
             custom_data=["Registros"],
-            barmode="group"
+            barmode="group",
+            category_orders={
+                "StatusADP": ordem_status,
+                "MesAno": status_df.sort_values(["Ano", "MesNum"])["MesAno"].unique()
+            }
         )
 
         fig_status.update_traces(
             textposition="outside",
             hovertemplate=(
                 "<b>%{x}</b><br>"
+                "Status: %{legendgroup}<br>"
                 "Quantidade: %{y}<br><br>"
+                "<b>Registros:</b><br>"
                 "%{customdata[0]}"
                 "<extra></extra>"
             ),
@@ -310,7 +293,7 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
             height=420,
             showlegend=True,
             hovermode="x unified",
-            xaxis_title="Data" if lang == "PT" else "Date",
+            xaxis_title="Mês e Ano" if lang == "PT" else "Month and Year",
             yaxis_title="Quantidade" if lang == "PT" else "Quantity",
             legend_title_text="Status"
         )
@@ -318,10 +301,7 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
         st.plotly_chart(fig_status, use_container_width=True)
 
     else:
-        if lang == "PT":
-            st.info("Nenhum status encontrado para ADP.")
-        else:
-            st.info("No ADP status found.")
+        st.info("Nenhum status encontrado para ADP.")
 
 # =========================
 # GRÁFICOS POR MÊS E SEMANA
@@ -401,8 +381,5 @@ for linha in range(0, len(meses_com_dados), 3):
 
             st.plotly_chart(fig, use_container_width=True)
 
-# =========================
-# TABELA
-# =========================
 st.subheader(tabela_txt)
 st.dataframe(df_filtro.sort_values("Data"), use_container_width=True)
