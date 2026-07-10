@@ -261,14 +261,20 @@ lista_disciplina = [todos_txt] + sorted(df["Disciplina"].dropna().unique())
 lista_tipo = [todos_txt] + sorted(df["TipoDocumento"].dropna().unique())
 lista_ano = [todos_txt] + sorted(df["Ano"].dropna().unique())
 
-ano = st.sidebar.radio(
-    f"📅 {ano_txt}",
-    lista_ano,
-    horizontal=True
+disciplina = st.sidebar.selectbox(
+    f"📂 {disciplina_txt}",
+    lista_disciplina
 )
 
-disciplina = st.sidebar.selectbox(f"📂 {disciplina_txt}", lista_disciplina)
-tipo_doc = st.sidebar.selectbox(f"📄 {tipo_txt}", lista_tipo)
+tipo_doc = st.sidebar.selectbox(
+    f"📄 {tipo_txt}",
+    lista_tipo
+)
+
+ano = st.sidebar.selectbox(
+    f"📅 {ano_txt}",
+    lista_ano
+)
 
 # =========================
 # FILTRO
