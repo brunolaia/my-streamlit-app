@@ -44,19 +44,30 @@ if "lang" not in st.session_state:
 # =========================
 def get_github_file_date():
     try:
-        api_url = "https://api.github.com/repos/brunolaia/my-streamlit-app/commits?path=BD_ENG.xlsx&page=1&per_page=1"
-        r = requests.get(api_url, timeout=10)
+        api_url = (
+            "https://api.github.com/repos/"
+            "brunolaia/my-streamlit-app/commits"
+            "?path=BD_ENG.xlsx&per_page=1"
+        )
+
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "Streamlit-Dashboard"
+        }
+
+        r = requests.get(api_url, headers=headers, timeout=15)
 
         if r.status_code == 200:
             data = r.json()
+
             if data:
                 date_str = data[0]["commit"]["committer"]["date"]
                 return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-    except:
-        pass
+
+    except Exception as erro:
+        print("Erro ao buscar data do BD_ENG.xlsx:", erro)
 
     return None
-
 # =========================
 # MENU LATERAL
 # =========================
@@ -274,10 +285,14 @@ file_date = get_github_file_date()
 
 if file_date:
     data_formatada = file_date.strftime("%d/%m/%Y")
-    st.success(f"{sucesso_txt} - {data_formatada}")
 else:
-    st.success(sucesso_txt)
+    data_formatada = datetime.now().strftime("%d/%m/%Y")
 
+if lang == "PT":
+    st.success(f"✅ Dados carregados com sucesso - {data_formatada}")
+else:
+    data_formatada_en = file_date.strftime("%m/%d/%Y") if file_date else datetime.now().strftime("%m/%d/%Y")
+    st.success(f"✅ Data loaded successfully - {data_formatada_en}")
 # =========================
 # FILTROS
 # =========================
