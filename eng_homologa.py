@@ -43,31 +43,36 @@ if "lang" not in st.session_state:
 # FUNÇÃO DATA GITHUB
 # =========================
 def get_github_file_date():
+
+    api_url = (
+        "https://api.github.com/repos/"
+        "brunolaia/my-streamlit-app/commits"
+        "?path=BD_ENG.xlsx&per_page=1"
+    )
+
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "Streamlit-Dashboard"
+    }
+
     try:
-        api_url = (
-            "https://api.github.com/repos/"
-            "brunolaia/my-streamlit-app/commits"
-            "?path=BD_ENG.xlsx&per_page=1"
-        )
-
-        headers = {
-            "Accept": "application/vnd.github+json",
-            "User-Agent": "Streamlit-Dashboard"
-        }
-
         r = requests.get(api_url, headers=headers, timeout=15)
+        r.raise_for_status()
 
-        if r.status_code == 200:
-            data = r.json()
+        data = r.json()
 
-            if data:
-                date_str = data[0]["commit"]["committer"]["date"]
-                return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+        if len(data) > 0:
+            data_commit = data[0]["commit"]["committer"]["date"]
+
+            return datetime.fromisoformat(
+                data_commit.replace("Z", "+00:00")
+            )
 
     except Exception as erro:
-        print("Erro ao buscar data do BD_ENG.xlsx:", erro)
+        print("Erro GitHub:", erro)
 
     return None
+
 # =========================
 # MENU LATERAL
 # =========================
@@ -102,7 +107,6 @@ else:
 # =========================
 # DEFINIR PLANILHA
 # =========================
-
 if lang == "PT":
 
     if area == "ENGENHARIA":
@@ -159,6 +163,7 @@ if lang == "PT":
     loading_txt = "📥 Carregando base de dados..."
     todos_txt = "TODOS"
     status_adp_txt = "✅ Status de aprovação da ADP"
+    total_adp_txt = "📊 Total de ADPs"
     qtd_label = "Quantidade"
     registros_label = "Registros"
     sucesso_txt = "✅ Dados carregados com sucesso"
@@ -204,6 +209,7 @@ else:
     loading_txt = "📥 Loading database..."
     todos_txt = "ALL"
     status_adp_txt = "✅ ADP Approval Status"
+    total_adp_txt = "📊 Total ADPs"
     qtd_label = "Quantity"
     registros_label = "Records"
     sucesso_txt = "✅ Data loaded successfully"
@@ -256,7 +262,6 @@ progress_bar.empty()
 # =========================
 if area == "ADP":
 
-    # Garante que existam pelo menos 5 colunas, mesmo se a aba ADP_EN vier com menos colunas
     while df.shape[1] < 5:
         df[f"ColunaExtra{df.shape[1] + 1}"] = ""
 
@@ -284,15 +289,17 @@ df["Semana"] = ("SEMANA " if lang == "PT" else "WEEK ") + df["SemanaNum"].astype
 file_date = get_github_file_date()
 
 if file_date:
-    data_formatada = file_date.strftime("%d/%m/%Y")
-else:
-    data_formatada = datetime.now().strftime("%d/%m/%Y")
 
-if lang == "PT":
-    st.success(f"✅ Dados carregados com sucesso - {data_formatada}")
+    if lang == "PT":
+        data_formatada = file_date.strftime("%d/%m/%Y")
+    else:
+        data_formatada = file_date.strftime("%m/%d/%Y")
+
+    st.success(f"{sucesso_txt} - {data_formatada}")
+
 else:
-    data_formatada_en = file_date.strftime("%m/%d/%Y") if file_date else datetime.now().strftime("%m/%d/%Y")
-    st.success(f"✅ Data loaded successfully - {data_formatada_en}")
+    st.success(sucesso_txt)
+
 # =========================
 # FILTROS
 # =========================
@@ -342,6 +349,156 @@ col1.metric(total_txt, len(df_filtro))
 col2.metric(disciplinas_txt, disciplina)
 col3.metric(tipos_txt, tipo_doc)
 col4.metric(ano_txt, ano)
+
+# =========================
+# TOTAL DE ADPs
+# =========================
+if area == "ADP" and "StatusADP" in df_filtro.columns:
+
+    df_status_total = df_filtro.copy()
+
+    if lang == "PT":
+        status_map_total = {
+            "APROVADO": "APROVADO",
+            "NÃO APROVADO": "NÃO APROVADO",
+            "NAO APROVADO": "NÃO APROVADO",
+            "APR. C/ RNC": "APR. C/ RNC",
+            "APROVADO C/ RNC": "APR. C/ RNC",
+            "APROVADO COM RNC": "APR. C/ RNC"
+        }
+
+        aprovado_label = "APROVADO"
+        nao_aprovado_label = "NÃO APROVADO"
+        rnc_label = "APR. C/ RNC"
+
+    else:
+        status_map_total = {
+            "APPROVED": "APPROVED",
+            "NOT APPROVED": "NOT APPROVED",
+            "APPROVED W/ RNC": "APPROVED W/ RNC",
+            "APPROVED WITH RNC": "APPROVED W/ RNC",
+            "APPROVED C/ RNC": "APPROVED W/ RNC",
+            "APR. C/ RNC": "APPROVED W/ RNC",
+            "APROVADO": "APPROVED",
+            "NÃO APROVADO": "NOT APPROVED",
+            "NAO APROVADO": "NOT APPROVED",
+            "APROVADO C/ RNC": "APPROVED W/ RNC",
+            "APROVADO COM RNC": "APPROVED W/ RNC"
+        }
+
+        aprovado_label = "APPROVED"
+        nao_aprovado_label = "NOT APPROVED"
+        rnc_label = "APPROVED W/ RNC"
+
+    df_status_total["StatusADP"] = (
+        df_status_total["StatusADP"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.upper()
+        .map(status_map_total)
+    )
+
+    st.subheader(total_adp_txt)
+
+    total_adps = len(df_status_total)
+
+    registros_total = "<br>".join(
+        map(str, df_status_total["Registro"].dropna())
+    )
+
+    df_aprovados = df_status_total[
+        df_status_total["StatusADP"] == aprovado_label
+    ]
+
+    df_nao_aprovados = df_status_total[
+        df_status_total["StatusADP"] == nao_aprovado_label
+    ]
+
+    df_rnc = df_status_total[
+        df_status_total["StatusADP"] == rnc_label
+    ]
+
+    resumo_adp = [
+        {
+            "Titulo": total_txt,
+            "Quantidade": total_adps,
+            "Registros": registros_total,
+            "Cor": "TOTAL"
+        },
+        {
+            "Titulo": aprovado_label,
+            "Quantidade": len(df_aprovados),
+            "Registros": "<br>".join(map(str, df_aprovados["Registro"].dropna())),
+            "Cor": "STATUS"
+        },
+        {
+            "Titulo": nao_aprovado_label,
+            "Quantidade": len(df_nao_aprovados),
+            "Registros": "<br>".join(map(str, df_nao_aprovados["Registro"].dropna())),
+            "Cor": "STATUS"
+        },
+        {
+            "Titulo": rnc_label,
+            "Quantidade": len(df_rnc),
+            "Registros": "<br>".join(map(str, df_rnc["Registro"].dropna())),
+            "Cor": "STATUS"
+        }
+    ]
+
+    colunas_resumo_adp = st.columns(4)
+
+    cores_resumo = px.colors.qualitative.Set2
+
+    for idx, item in enumerate(resumo_adp):
+
+        with colunas_resumo_adp[idx]:
+
+            resumo_df = pd.DataFrame([item])
+
+            fig_resumo = px.bar(
+                resumo_df,
+                x="Titulo",
+                y="Quantidade",
+                text="Quantidade",
+                custom_data=["Registros"],
+                color="Cor",
+                color_discrete_map={
+                    "TOTAL": "#002F6C",
+                    "STATUS": cores_resumo[idx % len(cores_resumo)]
+                }
+            )
+
+            fig_resumo.update_traces(
+                textposition="outside",
+                hovertemplate=(
+                    "<b>%{x}</b><br>"
+                    f"{qtd_label}: "
+                    "%{y}<br><br>"
+                    f"<b>{registros_label}:</b><br>"
+                    "%{customdata[0]}"
+                    "<extra></extra>"
+                ),
+                hoverlabel=dict(align="left")
+            )
+
+            fig_resumo.update_layout(
+                title={
+                    "text": item["Titulo"],
+                    "x": 0.5
+                },
+                height=300,
+                showlegend=False,
+                xaxis_title="",
+                yaxis_title=qtd_label,
+                hovermode="x unified"
+            )
+
+            st.plotly_chart(
+                fig_resumo,
+                use_container_width=True,
+                key=f"resumo_adp_{lang}_{idx}"
+            )
 
 # =========================
 # STATUS DE APROVAÇÃO DA ADP
@@ -484,7 +641,11 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                         yaxis_title=qtd_label
                     )
 
-                    st.plotly_chart(fig_status, use_container_width=True)
+                    st.plotly_chart(
+                        fig_status,
+                        use_container_width=True,
+                        key=f"status_adp_{lang}_{linha}_{idx}_{mes}"
+                    )
 
     else:
         st.info(nenhum_status_txt)
@@ -496,7 +657,11 @@ st.subheader(grafico_txt)
 
 cores = px.colors.qualitative.Set2
 ordem_meses = list(meses.values())
-meses_com_dados = [m for m in ordem_meses if not df_filtro[df_filtro["Mês"] == m].empty]
+
+meses_com_dados = [
+    m for m in ordem_meses
+    if not df_filtro[df_filtro["Mês"] == m].empty
+]
 
 for linha in range(0, len(meses_com_dados), 3):
     cols = st.columns(3)
@@ -528,7 +693,10 @@ for linha in range(0, len(meses_com_dados), 3):
                 "SemanaNum": [999]
             })
 
-            semana_df = pd.concat([total_df, semana_df], ignore_index=True)
+            semana_df = pd.concat(
+                [total_df, semana_df],
+                ignore_index=True
+            )
 
             semana_df["Cor"] = semana_df["Semana"].apply(
                 lambda x: "TOTAL" if x == total_txt else "SEMANA"
@@ -567,7 +735,11 @@ for linha in range(0, len(meses_com_dados), 3):
                 hovermode="x unified"
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(
+                fig,
+                use_container_width=True,
+                key=f"semanal_{lang}_{linha}_{idx}_{mes}"
+            )
 
 # =========================
 # TABELA
