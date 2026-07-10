@@ -91,14 +91,34 @@ else:
 # =========================
 # DEFINIR PLANILHA
 # =========================
-if area in ["ENGENHARIA", "ENGINEERING"]:
-    sheet_excel = "Planilha1" if lang == "PT" else "Planilha2"
-elif area == "ADP":
-    sheet_excel = "ADP_PT" if lang == "PT" else "ADP_EN"
-elif area == "MTO":
-    sheet_excel = "MTO_PT" if lang == "PT" else "MTO_EN"
-elif area == "TPS":
-    sheet_excel = "TPS_PT" if lang == "PT" else "TPS_EN"
+
+if lang == "PT":
+
+    if area == "ENGENHARIA":
+        sheet_excel = "Planilha1"
+
+    elif area == "ADP":
+        sheet_excel = "ADP_PT"
+
+    elif area == "MTO":
+        sheet_excel = "MTO_PT"
+
+    elif area == "TPS":
+        sheet_excel = "TPS_PT"
+
+else:
+
+    if area == "ENGINEERING":
+        sheet_excel = "Planilha2"
+
+    elif area == "ADP":
+        sheet_excel = "ADP_EN"
+
+    elif area == "MTO":
+        sheet_excel = "MTO_EN"
+
+    elif area == "TPS":
+        sheet_excel = "TPS_EN"
 
 # =========================
 # TEXTOS DINÂMICOS
@@ -224,8 +244,14 @@ progress_bar.empty()
 # TRATAMENTO
 # =========================
 if area == "ADP":
+
+    # Garante que existam pelo menos 5 colunas, mesmo se a aba ADP_EN vier com menos colunas
+    while df.shape[1] < 5:
+        df[f"ColunaExtra{df.shape[1] + 1}"] = ""
+
     df = df.iloc[:, :5]
     df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento", "StatusADP"]
+
 else:
     df = df.iloc[:, :4]
     df.columns = ["Data", "Disciplina", "Registro", "TipoDocumento"]
@@ -335,6 +361,7 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                 "NOT APPROVED": "NOT APPROVED",
                 "APPROVED W/ RNC": "APPROVED W/ RNC",
                 "APPROVED WITH RNC": "APPROVED W/ RNC",
+                "APPROVED C/ RNC": "APPROVED W/ RNC",
                 "APR. C/ RNC": "APPROVED W/ RNC",
                 "APROVADO": "APPROVED",
                 "NÃO APROVADO": "NOT APPROVED",
