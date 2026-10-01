@@ -270,51 +270,39 @@ progress_bar.empty()
 # =========================
 if area == "ADP":
 
-    while df.shape[1] < 5:
+    # Garante pelo menos 6 colunas
+    while df.shape[1] < 6:
         df[f"ColunaExtra{df.shape[1] + 1}"] = ""
 
-    df = df.iloc[:, :5]
+    # A até F
+    df = df.iloc[:, :6]
 
     df.columns = [
         "Data",
         "Disciplina",
         "Registro",
         "TipoDocumento",
-        "StatusADP"
+        "StatusADP",
+        "NomeDocumento"
     ]
 
 else:
 
-    while df.shape[1] < 4:
+    # Garante pelo menos 6 colunas
+    while df.shape[1] < 6:
         df[f"ColunaExtra{df.shape[1] + 1}"] = ""
 
-    df = df.iloc[:, :4]
+    # Colunas A, B, C, D e F
+    # A coluna E é ignorada
+    df = df.iloc[:, [0, 1, 2, 3, 5]]
 
     df.columns = [
         "Data",
         "Disciplina",
         "Registro",
-        "TipoDocumento"
+        "TipoDocumento",
+        "NomeDocumento"
     ]
-
-df["Data"] = pd.to_datetime(
-    df["Data"],
-    errors="coerce"
-)
-
-df = df.dropna(subset=["Data"])
-
-df["Ano"] = df["Data"].dt.year
-df["MesNum"] = df["Data"].dt.month
-df["Dia"] = df["Data"].dt.day
-df["Mês"] = df["MesNum"].map(meses)
-
-df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
-
-df["Semana"] = (
-    "SEMANA " if lang == "PT" else "WEEK "
-) + df["SemanaNum"].astype(str)
-
 # =========================
 # DATA DO EXCEL
 # =========================
@@ -921,7 +909,40 @@ for linha in range(
 # =========================
 st.subheader(tabela_txt)
 
+df_tabela = df_filtro.sort_values("Data").copy()
+
+# Renomeia apenas para exibição
+if lang == "PT":
+    df_tabela = df_tabela.rename(columns={
+        "Data": "Data",
+        "Disciplina": "Disciplina",
+        "Registro": "Registro",
+        "TipoDocumento": "Tipo de Documento",
+        "NomeDocumento": "Nome do Documento",
+        "Ano": "Ano",
+        "MesNum": "Nº Mês",
+        "Dia": "Dia",
+        "Mês": "Mês",
+        "SemanaNum": "Nº Semana",
+        "Semana": "Semana"
+    })
+else:
+    df_tabela = df_tabela.rename(columns={
+        "Data": "Date",
+        "Disciplina": "Discipline",
+        "Registro": "Record",
+        "TipoDocumento": "Document Type",
+        "NomeDocumento": "Document Name",
+        "Ano": "Year",
+        "MesNum": "Month No.",
+        "Dia": "Day",
+        "Mês": "Month",
+        "SemanaNum": "Week No.",
+        "Semana": "Week"
+    })
+
 st.dataframe(
-    df_filtro.sort_values("Data"),
-    use_container_width=True
+    df_tabela,
+    use_container_width=True,
+    hide_index=True
 )
