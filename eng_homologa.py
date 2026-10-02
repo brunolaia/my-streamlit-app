@@ -659,3 +659,542 @@ if (
                 "<b>%{label}</b><br>"
                 f"{qtd_label}: "
                 "%{value}<br>"
+                "Percentual: %{percent}<br><br>"
+                f"<b>{registros_label}:</b><br>"
+                "%{customdata[0]}"
+                "<extra></extra>"
+            ),
+            hoverlabel=dict(
+                align="left"
+            )
+        )
+
+        fig_pizza_adp.update_layout(
+            height=450,
+            showlegend=True,
+            legend_title_text="Status",
+            margin=dict(
+                l=20,
+                r=20,
+                t=20,
+                b=20
+            )
+        )
+
+        st.plotly_chart(
+            fig_pizza_adp,
+            use_container_width=True,
+            key=f"pizza_total_adp_{lang}"
+        )
+
+    else:
+
+        st.info(
+            nenhum_status_txt
+        )
+
+
+# =========================
+# STATUS DE APROVAÇÃO DA ADP
+# =========================
+
+if (
+    area == "ADP"
+    and "StatusADP" in df_filtro.columns
+):
+
+    st.subheader(
+        status_adp_txt
+    )
+
+    df_status = (
+        df_filtro
+        .dropna(
+            subset=["StatusADP"]
+        )
+        .copy()
+    )
+
+    if not df_status.empty:
+
+        if lang == "PT":
+
+            status_map = {
+                "APROVADO": "APROVADO",
+                "NÃO APROVADO": "NÃO APROVADO",
+                "NAO APROVADO": "NÃO APROVADO",
+                "APR. C/ RNC": "APR. C/ RNC",
+                "APROVADO C/ RNC": "APR. C/ RNC",
+                "APROVADO COM RNC": "APR. C/ RNC"
+            }
+
+            ordem_status = [
+                "APROVADO",
+                "NÃO APROVADO",
+                "APR. C/ RNC"
+            ]
+
+        else:
+
+            status_map = {
+                "APPROVED": "APPROVED",
+                "NOT APPROVED": "NOT APPROVED",
+                "APPROVED W/ RNC": "APPROVED W/ RNC",
+                "APPROVED WITH RNC": "APPROVED W/ RNC",
+                "APPROVED C/ RNC": "APPROVED W/ RNC",
+                "APR. C/ RNC": "APPROVED W/ RNC",
+                "APROVADO": "APPROVED",
+                "NÃO APROVADO": "NOT APPROVED",
+                "NAO APROVADO": "NOT APPROVED",
+                "APROVADO C/ RNC": "APPROVED W/ RNC",
+                "APROVADO COM RNC": "APPROVED W/ RNC"
+            }
+
+            ordem_status = [
+                "APPROVED",
+                "NOT APPROVED",
+                "APPROVED W/ RNC"
+            ]
+
+        df_status["StatusADP"] = (
+            df_status["StatusADP"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            .map(status_map)
+        )
+
+        df_status = df_status.dropna(
+            subset=["StatusADP"]
+        )
+
+        ordem_meses = list(
+            meses.values()
+        )
+
+        meses_com_status = [
+            mes
+            for mes in ordem_meses
+            if not df_status[
+                df_status["Mês"] == mes
+            ].empty
+        ]
+
+        cores = px.colors.qualitative.Set2
+
+        for linha in range(
+            0,
+            len(meses_com_status),
+            3
+        ):
+
+            cols_status = st.columns(3)
+
+            for idx, mes in enumerate(
+                meses_com_status[
+                    linha:linha + 3
+                ]
+            ):
+
+                with cols_statusdf_mes_status = df_status[
+                        df_status["Mês"] == mes
+                    ]
+
+                    status_mes_df = (
+                        df_mes_status
+                        .groupby("StatusADP")
+                        .agg(
+                            Quantidade=(
+                                "Registro",
+                                "count"
+                            ),
+                            Registros=(
+                                "Registro",
+                                lambda x: "<br>".join(
+                                    map(str, x)
+                                )
+                            )
+                        )
+                        .reset_index()
+                    )
+
+                    status_mes_df["StatusADP"] = pd.Categorical(
+                        status_mes_df["StatusADP"],
+                        categories=ordem_status,
+                        ordered=True
+                    )
+
+                    status_mes_df = status_mes_df.sort_values(
+                        "StatusADP"
+                    )
+
+                    total_registros_status = "<br>".join(
+                        map(
+                            str,
+                            df_mes_status["Registro"]
+                        )
+                    )
+
+                    total_quantidade_status = (
+                        status_mes_df["Quantidade"].sum()
+                    )
+
+                    total_status_df = pd.DataFrame({
+                        "StatusADP": [
+                            total_txt
+                        ],
+                        "Quantidade": [
+                            total_quantidade_status
+                        ],
+                        "Registros": [
+                            total_registros_status
+                        ]
+                    })
+
+                    status_mes_df = pd.concat(
+                        [
+                            total_status_df,
+                            status_mes_df
+                        ],
+                        ignore_index=True
+                    )
+
+                    status_mes_df["Cor"] = (
+                        status_mes_df["StatusADP"]
+                        .apply(
+                            lambda x:
+                            "TOTAL"
+                            if x == total_txt
+                            else "STATUS"
+                        )
+                    )
+
+                    fig_status = px.bar(
+                        status_mes_df,
+                        x="StatusADP",
+                        y="Quantidade",
+                        text="Quantidade",
+                        custom_data=["Registros"],
+                        color="Cor",
+                        color_discrete_map={
+                            "STATUS": cores[
+                                (linha + idx)
+                                % len(cores)
+                            ],
+                            "TOTAL": "#002F6C"
+                        }
+                    )
+
+                    fig_status.update_traces(
+                        textposition="outside",
+                        hovertemplate=(
+                            "<b>%{x}</b><br>"
+                            f"{qtd_label}: "
+                            "%{y}<br><br>"
+                            f"<b>{registros_label}:</b><br>"
+                            "%{customdata[0]}"
+                            "<extra></extra>"
+                        ),
+                        hoverlabel=dict(
+                            align="left"
+                        )
+                    )
+
+                    fig_status.update_layout(
+                        title={
+                            "text": f"📅 {mes}",
+                            "x": 0.5
+                        },
+                        height=320,
+                        showlegend=False,
+                        hovermode="x unified",
+                        xaxis_title="",
+                        yaxis_title=qtd_label
+                    )
+
+                    st.plotly_chart(
+                        fig_status,
+                        use_container_width=True,
+                        key=(
+                            f"status_adp_"
+                            f"{lang}_{linha}_{idx}_{mes}"
+                        )
+                    )
+
+    else:
+
+        st.info(
+            nenhum_status_txt
+        )
+
+
+# =========================
+# GRÁFICOS POR MÊS E SEMANA
+# =========================
+
+st.subheader(
+    grafico_txt
+)
+
+cores = px.colors.qualitative.Set2
+
+ordem_meses = list(
+    meses.values()
+)
+
+meses_com_dados = [
+    mes
+    for mes in ordem_meses
+    if not df_filtro[
+        df_filtro["Mês"] == mes
+    ].empty
+]
+
+for linha in range(
+    0,
+    len(meses_com_dados),
+    3
+):
+
+    cols = st.columns(3)
+
+    for idx, mes in enumerate(
+        meses_com_dados[
+            linha:linha + 3
+        ]
+    ):
+
+        with colsdf_mes = df_filtro[
+                df_filtro["Mês"] == mes
+            ]
+
+            semana_df = (
+                df_mes
+                .groupby("Semana")
+                .agg(
+                    Quantidade=(
+                        "Registro",
+                        "count"
+                    ),
+                    Registros=(
+                        "Registro",
+                        lambda x: "<br>".join(
+                            map(str, x)
+                        )
+                    )
+                )
+                .reset_index()
+            )
+
+            semana_df["SemanaNum"] = pd.to_numeric(
+                semana_df["Semana"]
+                .str.extract(
+                    r"(\d+)"
+                )[0],
+                errors="coerce"
+            ).fillna(0).astype(int)
+
+            semana_df = semana_df.sort_values(
+                "SemanaNum"
+            )
+
+            total_registros = "<br>".join(
+                map(
+                    str,
+                    df_mes["Registro"]
+                )
+            )
+
+            total_quantidade = (
+                semana_df["Quantidade"].sum()
+            )
+
+            total_df = pd.DataFrame({
+                "Semana": [
+                    total_txt
+                ],
+                "Quantidade": [
+                    total_quantidade
+                ],
+                "Registros": [
+                    total_registros
+                ],
+                "SemanaNum": [
+                    999
+                ]
+            })
+
+            semana_df = pd.concat(
+                [
+                    total_df,
+                    semana_df
+                ],
+                ignore_index=True
+            )
+
+            semana_df["Cor"] = (
+                semana_df["Semana"]
+                .apply(
+                    lambda x:
+                    "TOTAL"
+                    if x == total_txt
+                    else "SEMANA"
+                )
+            )
+
+            fig = px.bar(
+                semana_df,
+                x="Semana",
+                y="Quantidade",
+                text="Quantidade",
+                custom_data=["Registros"],
+                color="Cor",
+                color_discrete_map={
+                    "SEMANA": cores[
+                        (linha + idx)
+                        % len(cores)
+                    ],
+                    "TOTAL": "#002F6C"
+                }
+            )
+
+            fig.update_traces(
+                textposition="outside",
+                hovertemplate=(
+                    "<b>%{x}</b><br>"
+                    f"{qtd_label}: "
+                    "%{y}<br><br>"
+                    f"<b>{registros_label}:</b><br>"
+                    "%{customdata[0]}"
+                    "<extra></extra>"
+                ),
+                hoverlabel=dict(
+                    align="left"
+                )
+            )
+
+            fig.update_layout(
+                title={
+                    "text": f"📅 {mes}",
+                    "x": 0.5
+                },
+                height=320,
+                showlegend=False,
+                hovermode="x unified"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True,
+                key=(
+                    f"semanal_"
+                    f"{lang}_{linha}_{idx}_{mes}"
+                )
+            )
+
+
+# =========================
+# TABELA
+# =========================
+
+st.subheader(
+    tabela_txt
+)
+
+
+# Somente estas colunas aparecem
+# na tabela final.
+#
+# Dia e SemanaNum continuam no DataFrame
+# para os calculos internos, mas ficam ocultas.
+
+colunas_tabela = [
+    "Data",
+    "Disciplina",
+    "Registro",
+    "NomeDocumento",
+    "TipoDocumento"
+]
+
+
+if area == "ADP":
+
+    colunas_tabela.append(
+        "StatusADP"
+    )
+
+
+colunas_tabela = [
+    coluna
+    for coluna in colunas_tabela
+    if coluna in df_filtro.columns
+]
+
+
+df_tabela = (
+    df_filtro[
+        colunas_tabela
+    ]
+    .sort_values("Data")
+    .copy()
+)
+
+
+# =========================
+# FORMATAÇÃO VISUAL DA DATA
+# =========================
+# Altera somente a exibição na tabela.
+# O DataFrame principal continua usando datetime
+# normalmente para filtros, meses, semanas e gráficos.
+
+if lang == "PT":
+    df_tabela["Data"] = df_tabela["Data"].dt.strftime(
+        "%d/%m/%Y"
+    )
+else:
+    df_tabela["Data"] = df_tabela["Data"].dt.strftime(
+        "%m/%d/%Y"
+    )
+
+
+# =========================
+# NOMES DAS COLUNAS
+# =========================
+
+if lang == "PT":
+
+    nomes_colunas = {
+        "Data": "Data",
+        "Disciplina": "Disciplina",
+        "Registro": "Registro",
+        "NomeDocumento": "Nome do Documento",
+        "TipoDocumento": "Tipo de Documento",
+        "StatusADP": "Status ADP"
+    }
+
+else:
+
+    nomes_colunas = {
+        "Data": "Date",
+        "Disciplina": "Discipline",
+        "Registro": "Record",
+        "NomeDocumento": "Document Name",
+        "TipoDocumento": "Document Type",
+        "StatusADP": "ADP Status"
+    }
+
+
+df_tabela = df_tabela.rename(
+    columns=nomes_colunas
+)
+
+
+# =========================
+# EXIBIÇÃO
+# =========================
+
+st.dataframe(
+    df_tabela,
+    use_container_width=True,
+    hide_index=True
+)
