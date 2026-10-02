@@ -8,9 +8,9 @@ import requests
 from datetime import datetime
 
 
-# ============================================================
-# CONFIGURACAO
-# ============================================================
+# =========================
+# CONFIGURAÇÃO
+# =========================
 
 st.set_page_config(
     page_title="Dashboard Engenharia - CEDOC",
@@ -18,45 +18,42 @@ st.set_page_config(
 )
 
 
-# ============================================================
+# =========================
 # AJUSTE MENU LATERAL
-# ============================================================
+# =========================
 
-st.markdown(
-    """
-    <style>
-    section[data-testid="stSidebar"] {
-        overflow-y: auto;
-    }
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] {
+    overflow-y: auto;
+}
 
-    section[data-testid="stSidebar"] label {
-        font-size: 13px !important;
-    }
+section[data-testid="stSidebar"] label {
+    font-size: 13px !important;
+}
 
-    section[data-testid="stSidebar"] .stSelectbox {
-        margin-bottom: -8px;
-    }
+section[data-testid="stSidebar"] .stSelectbox {
+    margin-bottom: -8px;
+}
 
-    section[data-testid="stSidebar"] .stRadio {
-        margin-bottom: -8px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+section[data-testid="stSidebar"] .stRadio {
+    margin-bottom: -8px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 
-# ============================================================
+# =========================
 # CONTROLE DE IDIOMA
-# ============================================================
+# =========================
 
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
 
 
-# ============================================================
-# FUNCAO DATA GITHUB
-# ============================================================
+# =========================
+# FUNÇÃO DATA GITHUB
+# =========================
 
 def get_github_file_date():
 
@@ -98,9 +95,9 @@ def get_github_file_date():
     return None
 
 
-# ============================================================
+# =========================
 # MENU LATERAL
-# ============================================================
+# =========================
 
 st.sidebar.header("MENU")
 
@@ -108,27 +105,33 @@ col_pt, col_en = st.sidebar.columns(2)
 
 with col_pt:
 
-    if st.button("PT", key="pt"):
+    if st.button(
+        "🇧🇷 PT",
+        key="pt"
+    ):
         st.session_state.lang = "PT"
 
 
 with col_en:
 
-    if st.button("EN", key="en"):
+    if st.button(
+        "🇸🇬 EN",
+        key="en"
+    ):
         st.session_state.lang = "EN"
 
 
 lang = st.session_state.lang
 
 
-# ============================================================
-# MENU AREA
-# ============================================================
+# =========================
+# MENU ÁREA
+# =========================
 
 if lang == "PT":
 
     area = st.sidebar.selectbox(
-        "TIPO DOCUMENTO",
+        "📁 TIPO DOCUMENTO",
         [
             "ENGENHARIA",
             "ADP",
@@ -140,7 +143,7 @@ if lang == "PT":
 else:
 
     area = st.sidebar.selectbox(
-        "DOCUMENT TYPE",
+        "📁 DOCUMENT TYPE",
         [
             "ENGINEERING",
             "ADP",
@@ -150,9 +153,9 @@ else:
     )
 
 
-# ============================================================
+# =========================
 # DEFINIR PLANILHA
-# ============================================================
+# =========================
 
 if lang == "PT":
 
@@ -183,23 +186,23 @@ else:
         sheet_excel = "TPS_EN"
 
 
-# ============================================================
-# TEXTOS DINAMICOS
-# ============================================================
+# =========================
+# TEXTOS DINÂMICOS
+# =========================
 
 if lang == "PT":
 
     if area == "ENGENHARIA":
-        titulo = "Dashboard - Engenharia NPO"
+        titulo = "📊 Dashboard - Engenharia NPO"
 
     elif area == "ADP":
-        titulo = "Dashboard - ADP"
+        titulo = "📊 Dashboard - ADP"
 
     elif area == "MTO":
-        titulo = "Dashboard - MTO"
+        titulo = "📊 Dashboard - MTO"
 
     elif area == "TPS":
-        titulo = "Dashboard - TPS"
+        titulo = "📊 Dashboard - TPS"
 
     dev = "Desenvolvido por Bruno Laia"
 
@@ -207,19 +210,19 @@ if lang == "PT":
     disciplina_txt = "Disciplina"
     ano_txt = "Ano"
     tipo_txt = "Tipo de Documento"
-    resumo_txt = "Resumo"
+    resumo_txt = "📈 Resumo"
     total_txt = "Total"
     disciplinas_txt = "Disciplinas"
     tipos_txt = "Tipos"
-    grafico_txt = "Registros por Mês e Semana"
-    tabela_txt = "Dados detalhados"
-    loading_txt = "Carregando base de dados..."
+    grafico_txt = "📊 Registros por Mês e Semana"
+    tabela_txt = "📋 Dados detalhados"
+    loading_txt = "📥 Carregando base de dados..."
     todos_txt = "TODOS"
-    status_adp_txt = "Status de aprovação da ADP"
-    total_adp_txt = "Total de ADPs"
+    status_adp_txt = "✅ Status de aprovação da ADP"
+    total_adp_txt = "📊 Total de ADPs"
     qtd_label = "Quantidade"
     registros_label = "Registros"
-    sucesso_txt = "Dados carregados com sucesso"
+    sucesso_txt = "✅ Dados carregados com sucesso"
     nenhum_status_txt = "Nenhum status encontrado para ADP."
     nome_documento_txt = "Nome do Documento"
 
@@ -241,16 +244,16 @@ if lang == "PT":
 else:
 
     if area == "ENGINEERING":
-        titulo = "Engineering Dashboard"
+        titulo = "📊 Engineering Dashboard"
 
     elif area == "ADP":
-        titulo = "ADP Dashboard"
+        titulo = "📊 ADP Dashboard"
 
     elif area == "MTO":
-        titulo = "MTO Dashboard"
+        titulo = "📊 MTO Dashboard"
 
     elif area == "TPS":
-        titulo = "TPS Dashboard"
+        titulo = "📊 TPS Dashboard"
 
     dev = "Developed by Bruno Laia"
 
@@ -258,19 +261,19 @@ else:
     disciplina_txt = "Discipline"
     ano_txt = "Year"
     tipo_txt = "Document Type"
-    resumo_txt = "Summary"
+    resumo_txt = "📈 Summary"
     total_txt = "Total"
     disciplinas_txt = "Disciplines"
     tipos_txt = "Types"
-    grafico_txt = "Records by Month and Week"
-    tabela_txt = "Detailed Data"
-    loading_txt = "Loading database..."
+    grafico_txt = "📊 Records by Month and Week"
+    tabela_txt = "📋 Detailed Data"
+    loading_txt = "📥 Loading database..."
     todos_txt = "ALL"
-    status_adp_txt = "ADP Approval Status"
-    total_adp_txt = "Total ADPs"
+    status_adp_txt = "✅ ADP Approval Status"
+    total_adp_txt = "📊 Total ADPs"
     qtd_label = "Quantity"
     registros_label = "Records"
-    sucesso_txt = "Data loaded successfully"
+    sucesso_txt = "✅ Data loaded successfully"
     nenhum_status_txt = "No ADP approval status found."
     nome_documento_txt = "Document Name"
 
@@ -290,9 +293,9 @@ else:
     }
 
 
-# ============================================================
-# TITULO
-# ============================================================
+# =========================
+# TÍTULO
+# =========================
 
 st.title(titulo)
 
@@ -302,9 +305,9 @@ st.markdown(
 )
 
 
-# ============================================================
-# LEITURA DO EXCEL
-# ============================================================
+# =========================
+# LEITURA
+# =========================
 
 url = (
     "https://raw.githubusercontent.com/"
@@ -336,18 +339,18 @@ with st.spinner(loading_txt):
 progress_bar.empty()
 
 
-# ============================================================
-# TRATAMENTO DAS COLUNAS
-# ============================================================
+# =========================
+# TRATAMENTO
+# =========================
 
-# Estrutura esperada do BD_ENG.xlsx:
+# Estrutura do Excel:
 #
-# Coluna A = Data
-# Coluna B = Disciplina
-# Coluna C = Registro
-# Coluna D = TipoDocumento
-# Coluna E = StatusADP, somente ADP
-# Coluna F = NomeDocumento
+# A = Data
+# B = Disciplina
+# C = Registro
+# D = TipoDocumento
+# E = StatusADP (somente ADP)
+# F = NomeDocumento
 
 
 if area == "ADP":
@@ -384,10 +387,6 @@ else:
     ]
 
 
-# ============================================================
-# TRATAMENTO DATA
-# ============================================================
-
 df["Data"] = pd.to_datetime(
     df["Data"],
     errors="coerce"
@@ -410,14 +409,15 @@ df["SemanaNum"] = (
 )
 
 df["Semana"] = (
-    ("SEMANA " if lang == "PT" else "WEEK ")
-    + df["SemanaNum"].astype(str)
-)
+    "SEMANA "
+    if lang == "PT"
+    else "WEEK "
+) + df["SemanaNum"].astype(str)
 
 
-# ============================================================
+# =========================
 # DATA DO EXCEL
-# ============================================================
+# =========================
 
 file_date = get_github_file_date()
 
@@ -446,39 +446,36 @@ else:
     )
 
 
-# ============================================================
+# =========================
 # FILTROS
-# ============================================================
+# =========================
 
 st.sidebar.subheader(
     filtros_txt
 )
 
-lista_disciplina = (
-    [todos_txt]
-    + sorted(
-        df["Disciplina"]
-        .dropna()
-        .unique()
-    )
+lista_disciplina = [
+    todos_txt
+] + sorted(
+    df["Disciplina"]
+    .dropna()
+    .unique()
 )
 
-lista_tipo = (
-    [todos_txt]
-    + sorted(
-        df["TipoDocumento"]
-        .dropna()
-        .unique()
-    )
+lista_tipo = [
+    todos_txt
+] + sorted(
+    df["TipoDocumento"]
+    .dropna()
+    .unique()
 )
 
-lista_ano = (
-    [todos_txt]
-    + sorted(
-        df["Ano"]
-        .dropna()
-        .unique()
-    )
+lista_ano = [
+    todos_txt
+] + sorted(
+    df["Ano"]
+    .dropna()
+    .unique()
 )
 
 disciplina = st.sidebar.selectbox(
@@ -497,9 +494,9 @@ ano = st.sidebar.selectbox(
 )
 
 
-# ============================================================
+# =========================
 # FILTRO
-# ============================================================
+# =========================
 
 df_filtro = df.copy()
 
@@ -522,9 +519,9 @@ if ano != todos_txt:
     ]
 
 
-# ============================================================
+# =========================
 # RESUMO
-# ============================================================
+# =========================
 
 st.subheader(
     resumo_txt
@@ -553,9 +550,9 @@ col4.metric(
 )
 
 
-# ============================================================
-# GRAFICO DE PIZZA - TOTAL DE ADPs
-# ============================================================
+# =========================
+# GRÁFICO DE PIZZA - TOTAL DE ADPs
+# =========================
 
 if (
     area == "ADP"
@@ -697,9 +694,9 @@ if (
         )
 
 
-# ============================================================
-# STATUS DE APROVACAO DA ADP
-# ============================================================
+# =========================
+# STATUS DE APROVAÇÃO DA ADP
+# =========================
 
 if (
     area == "ADP"
@@ -815,8 +812,7 @@ if (
                             ),
                             Registros=(
                                 "Registro",
-                                lambda x:
-                                "<br>".join(
+                                lambda x: "<br>".join(
                                     map(str, x)
                                 )
                             )
@@ -908,7 +904,7 @@ if (
 
                     fig_status.update_layout(
                         title={
-                            "text": f"Mês: {mes}",
+                            "text": f"📅 {mes}",
                             "x": 0.5
                         },
                         height=320,
@@ -934,9 +930,9 @@ if (
         )
 
 
-# ============================================================
-# GRAFICOS POR MES E SEMANA
-# ============================================================
+# =========================
+# GRÁFICOS POR MÊS E SEMANA
+# =========================
 
 st.subheader(
     grafico_txt
@@ -986,8 +982,7 @@ for linha in range(
                     ),
                     Registros=(
                         "Registro",
-                        lambda x:
-                        "<br>".join(
+                        lambda x: "<br>".join(
                             map(str, x)
                         )
                     )
@@ -1084,7 +1079,7 @@ for linha in range(
 
             fig.update_layout(
                 title={
-                    "text": f"Mês: {mes}",
+                    "text": f"📅 {mes}",
                     "x": 0.5
                 },
                 height=320,
@@ -1102,20 +1097,20 @@ for linha in range(
             )
 
 
-# ============================================================
-# TABELA DE DADOS DETALHADOS
-# ============================================================
+# =========================
+# TABELA
+# =========================
 
 st.subheader(
     tabela_txt
 )
 
 
-# Colunas que serão mostradas na tabela.
+# Somente estas colunas aparecem
+# na tabela final.
 #
-# Dia e SemanaNum NAO entram aqui.
-# Eles continuam no DataFrame principal porque
-# sao utilizados nos calculos dos graficos.
+# Dia e SemanaNum continuam no DataFrame
+# para os calculos internos, mas ficam ocultas.
 
 colunas_tabela = [
     "Data",
@@ -1133,8 +1128,6 @@ if area == "ADP":
     )
 
 
-# Garante que somente colunas existentes sejam usadas
-
 colunas_tabela = [
     coluna
     for coluna in colunas_tabela
@@ -1151,9 +1144,9 @@ df_tabela = (
 )
 
 
-# ============================================================
+# =========================
 # NOMES DAS COLUNAS
-# ============================================================
+# =========================
 
 if lang == "PT":
 
@@ -1183,9 +1176,9 @@ df_tabela = df_tabela.rename(
 )
 
 
-# ============================================================
-# EXIBICAO DA TABELA
-# ============================================================
+# =========================
+# EXIBIÇÃO
+# =========================
 
 st.dataframe(
     df_tabela,
