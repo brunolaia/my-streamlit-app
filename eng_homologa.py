@@ -6,7 +6,6 @@ import plotly.express as px
 import time
 import requests
 from datetime import datetime
-from st_aggrid import AgGrid, GridOptionsBuilder
 
 
 # =========================
@@ -343,6 +342,16 @@ progress_bar.empty()
 # =========================
 # TRATAMENTO
 # =========================
+
+# Estrutura do Excel:
+#
+# A = Data
+# B = Disciplina
+# C = Registro
+# D = TipoDocumento
+# E = StatusADP (somente ADP)
+# F = NomeDocumento
+
 
 if area == "ADP":
 
@@ -1097,9 +1106,11 @@ st.subheader(
 )
 
 
-# =========================
-# COLUNAS DA TABELA
-# =========================
+# Somente estas colunas aparecem
+# na tabela final.
+#
+# Dia e SemanaNum continuam no DataFrame
+# para os calculos internos, mas ficam ocultas.
 
 colunas_tabela = [
     "Data",
@@ -1108,6 +1119,7 @@ colunas_tabela = [
     "NomeDocumento",
     "TipoDocumento"
 ]
+
 
 if area == "ADP":
 
@@ -1129,17 +1141,6 @@ df_tabela = (
     ]
     .sort_values("Data")
     .copy()
-)
-
-
-# =========================
-# DATA
-# =========================
-
-df_tabela["Data"] = df_tabela[
-    "Data"
-].dt.strftime(
-    "%m/%d/%Y"
 )
 
 
@@ -1176,145 +1177,11 @@ df_tabela = df_tabela.rename(
 
 
 # =========================
-# AG GRID
+# EXIBIÇÃO
 # =========================
 
-gb = GridOptionsBuilder.from_dataframe(
-    df_tabela
-)
-
-
-# =========================
-# FILTROS NAS COLUNAS
-# =========================
-
-gb.configure_default_column(
-    filter=True,
-    sortable=True,
-    resizable=True,
-    floatingFilter=True,
-    editable=False
-)
-
-
-# =========================
-# DATA
-# =========================
-
-if "Data" in df_tabela.columns:
-
-    gb.configure_column(
-        "Data",
-        filter="agTextColumnFilter",
-        floatingFilter=True,
-        sortable=True,
-        resizable=True,
-        minWidth=120
-    )
-
-
-# =========================
-# DISCIPLINA
-# =========================
-
-if "Disciplina" in df_tabela.columns:
-
-    gb.configure_column(
-        "Disciplina",
-        filter="agTextColumnFilter",
-        floatingFilter=True,
-        sortable=True,
-        resizable=True,
-        minWidth=130
-    )
-
-
-# =========================
-# REGISTRO
-# =========================
-
-if "Registro" in df_tabela.columns:
-
-    gb.configure_column(
-        "Registro",
-        filter="agTextColumnFilter",
-        floatingFilter=True,
-        sortable=True,
-        resizable=True,
-        minWidth=200
-    )
-
-
-# =========================
-# NOME DO DOCUMENTO
-# =========================
-
-if "Nome do Documento" in df_tabela.columns:
-
-    gb.configure_column(
-        "Nome do Documento",
-        filter="agTextColumnFilter",
-        floatingFilter=True,
-        sortable=True,
-        resizable=True,
-        minWidth=280
-    )
-
-
-# =========================
-# TIPO DE DOCUMENTO
-# =========================
-
-if "Tipo de Documento" in df_tabela.columns:
-
-    gb.configure_column(
-        "Tipo de Documento",
-        filter="agTextColumnFilter",
-        floatingFilter=True,
-        sortable=True,
-        resizable=True,
-        minWidth=180
-    )
-
-
-# =========================
-# STATUS ADP
-# =========================
-
-if "Status ADP" in df_tabela.columns:
-
-    gb.configure_column(
-        "Status ADP",
-        filter="agTextColumnFilter",
-        floatingFilter=True,
-        sortable=True,
-        resizable=True,
-        minWidth=160
-    )
-
-
-# =========================
-# CONFIGURAÇÕES DA TABELA
-# =========================
-
-gb.configure_grid_options(
-    domLayout="normal",
-    suppressHorizontalScroll=False,
-    animateRows=True
-)
-
-
-# =========================
-# EXIBIÇÃO DA TABELA
-# =========================
-
-AgGrid(
+st.dataframe(
     df_tabela,
-    gridOptions=gb.build(),
-    height=500,
-    width="100%",
-    fit_columns_on_grid_load=False,
-    allow_unsafe_jscode=False,
-    theme="streamlit",
-    key=f"tabela_detalhada_{lang}_{area}"
+    use_container_width=True,
+    hide_index=True
 )
