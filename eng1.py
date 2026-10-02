@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -5,14 +7,21 @@ import time
 import requests
 from datetime import datetime
 
+
 # =========================
 # CONFIGURAÇÃO
 # =========================
-st.set_page_config(page_title="Dashboard Engenharia - CEDOC", layout="wide")
+
+st.set_page_config(
+    page_title="Dashboard Engenharia - CEDOC",
+    layout="wide"
+)
+
 
 # =========================
 # AJUSTE MENU LATERAL
 # =========================
+
 st.markdown("""
 <style>
 section[data-testid="stSidebar"] {
@@ -33,15 +42,19 @@ section[data-testid="stSidebar"] .stRadio {
 </style>
 """, unsafe_allow_html=True)
 
+
 # =========================
 # CONTROLE DE IDIOMA
 # =========================
+
 if "lang" not in st.session_state:
     st.session_state.lang = "PT"
+
 
 # =========================
 # FUNÇÃO DATA GITHUB
 # =========================
+
 def get_github_file_date():
 
     api_url = (
@@ -56,12 +69,19 @@ def get_github_file_date():
     }
 
     try:
-        r = requests.get(api_url, headers=headers, timeout=15)
+
+        r = requests.get(
+            api_url,
+            headers=headers,
+            timeout=15
+        )
+
         r.raise_for_status()
 
         data = r.json()
 
         if len(data) > 0:
+
             data_commit = data[0]["commit"]["committer"]["date"]
 
             return datetime.fromisoformat(
@@ -69,44 +89,74 @@ def get_github_file_date():
             )
 
     except Exception as erro:
+
         print("Erro GitHub:", erro)
 
     return None
 
+
 # =========================
 # MENU LATERAL
 # =========================
+
 st.sidebar.header("MENU")
 
 col_pt, col_en = st.sidebar.columns(2)
 
 with col_pt:
-    if st.button("🇧🇷 PT", key="pt"):
+
+    if st.button(
+        "🇧🇷 PT",
+        key="pt"
+    ):
         st.session_state.lang = "PT"
 
+
 with col_en:
-    if st.button("🇸🇬 EN", key="en"):
+
+    if st.button(
+        "🇸🇬 EN",
+        key="en"
+    ):
         st.session_state.lang = "EN"
 
+
 lang = st.session_state.lang
+
 
 # =========================
 # MENU ÁREA
 # =========================
+
 if lang == "PT":
+
     area = st.sidebar.selectbox(
         "📁 TIPO DOCUMENTO",
-        ["ENGENHARIA", "ADP", "MTO", "TPS"]
+        [
+            "ENGENHARIA",
+            "ADP",
+            "MTO",
+            "TPS"
+        ]
     )
+
 else:
+
     area = st.sidebar.selectbox(
         "📁 DOCUMENT TYPE",
-        ["ENGINEERING", "ADP", "MTO", "TPS"]
+        [
+            "ENGINEERING",
+            "ADP",
+            "MTO",
+            "TPS"
+        ]
     )
+
 
 # =========================
 # DEFINIR PLANILHA
 # =========================
+
 if lang == "PT":
 
     if area == "ENGENHARIA":
@@ -135,21 +185,27 @@ else:
     elif area == "TPS":
         sheet_excel = "TPS_EN"
 
+
 # =========================
 # TEXTOS DINÂMICOS
 # =========================
+
 if lang == "PT":
 
     if area == "ENGENHARIA":
         titulo = "📊 Dashboard - Engenharia NPO"
+
     elif area == "ADP":
         titulo = "📊 Dashboard - ADP"
+
     elif area == "MTO":
         titulo = "📊 Dashboard - MTO"
+
     elif area == "TPS":
         titulo = "📊 Dashboard - TPS"
 
     dev = "Desenvolvido por Bruno Laia"
+
     filtros_txt = "Filtros"
     disciplina_txt = "Disciplina"
     ano_txt = "Ano"
@@ -168,6 +224,7 @@ if lang == "PT":
     registros_label = "Registros"
     sucesso_txt = "✅ Dados carregados com sucesso"
     nenhum_status_txt = "Nenhum status encontrado para ADP."
+    nome_documento_txt = "Nome do Documento"
 
     meses = {
         1: "JANEIRO",
@@ -188,14 +245,18 @@ else:
 
     if area == "ENGINEERING":
         titulo = "📊 Engineering Dashboard"
+
     elif area == "ADP":
         titulo = "📊 ADP Dashboard"
+
     elif area == "MTO":
         titulo = "📊 MTO Dashboard"
+
     elif area == "TPS":
         titulo = "📊 TPS Dashboard"
 
     dev = "Developed by Bruno Laia"
+
     filtros_txt = "Filters"
     disciplina_txt = "Discipline"
     ano_txt = "Year"
@@ -214,6 +275,7 @@ else:
     registros_label = "Records"
     sucesso_txt = "✅ Data loaded successfully"
     nenhum_status_txt = "No ADP approval status found."
+    nome_documento_txt = "Document Name"
 
     meses = {
         1: "JANUARY",
@@ -230,9 +292,11 @@ else:
         12: "DECEMBER"
     }
 
+
 # =========================
 # TÍTULO
 # =========================
+
 st.title(titulo)
 
 st.markdown(
@@ -240,17 +304,24 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+
 # =========================
 # LEITURA
 # =========================
-url = "https://raw.githubusercontent.com/brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
+
+url = (
+    "https://raw.githubusercontent.com/"
+    "brunolaia/my-streamlit-app/main/BD_ENG.xlsx"
+)
 
 progress_bar = st.progress(0)
 
 with st.spinner(loading_txt):
 
     for i in range(40):
+
         time.sleep(0.01)
+
         progress_bar.progress(i + 1)
 
     df = pd.read_excel(
@@ -260,95 +331,151 @@ with st.spinner(loading_txt):
     )
 
     for i in range(40, 100):
+
         time.sleep(0.005)
+
         progress_bar.progress(i + 1)
 
 progress_bar.empty()
 
+
 # =========================
 # TRATAMENTO
 # =========================
+
+# Estrutura do Excel:
+#
+# A = Data
+# B = Disciplina
+# C = Registro
+# D = TipoDocumento
+# E = StatusADP (somente ADP)
+# F = NomeDocumento
+
+
 if area == "ADP":
 
-    while df.shape[1] < 5:
+    while df.shape[1] < 6:
+
         df[f"ColunaExtra{df.shape[1] + 1}"] = ""
 
-    df = df.iloc[:, :5]
+    df = df.iloc[:, :6]
 
     df.columns = [
         "Data",
         "Disciplina",
         "Registro",
         "TipoDocumento",
-        "StatusADP"
+        "StatusADP",
+        "NomeDocumento"
     ]
 
 else:
 
-    while df.shape[1] < 4:
+    while df.shape[1] < 6:
+
         df[f"ColunaExtra{df.shape[1] + 1}"] = ""
 
-    df = df.iloc[:, :4]
+    df = df.iloc[:, [0, 1, 2, 3, 5]]
 
     df.columns = [
         "Data",
         "Disciplina",
         "Registro",
-        "TipoDocumento"
+        "TipoDocumento",
+        "NomeDocumento"
     ]
+
 
 df["Data"] = pd.to_datetime(
     df["Data"],
     errors="coerce"
 )
 
-df = df.dropna(subset=["Data"])
+df = df.dropna(
+    subset=["Data"]
+)
 
 df["Ano"] = df["Data"].dt.year
+
 df["MesNum"] = df["Data"].dt.month
+
 df["Dia"] = df["Data"].dt.day
+
 df["Mês"] = df["MesNum"].map(meses)
 
-df["SemanaNum"] = ((df["Dia"] - 1) // 7 + 1)
+df["SemanaNum"] = (
+    (df["Dia"] - 1) // 7 + 1
+)
 
 df["Semana"] = (
-    "SEMANA " if lang == "PT" else "WEEK "
+    "SEMANA "
+    if lang == "PT"
+    else "WEEK "
 ) + df["SemanaNum"].astype(str)
+
 
 # =========================
 # DATA DO EXCEL
 # =========================
+
 file_date = get_github_file_date()
 
 if file_date:
 
     if lang == "PT":
-        data_formatada = file_date.strftime("%d/%m/%Y")
+
+        data_formatada = file_date.strftime(
+            "%d/%m/%Y"
+        )
+
     else:
-        data_formatada = file_date.strftime("%m/%d/%Y")
+
+        data_formatada = file_date.strftime(
+            "%m/%d/%Y"
+        )
 
     st.success(
         f"{sucesso_txt} - {data_formatada}"
     )
 
 else:
-    st.success(sucesso_txt)
+
+    st.success(
+        sucesso_txt
+    )
+
 
 # =========================
 # FILTROS
 # =========================
-st.sidebar.subheader(filtros_txt)
 
-lista_disciplina = [todos_txt] + sorted(
-    df["Disciplina"].dropna().unique()
+st.sidebar.subheader(
+    filtros_txt
 )
 
-lista_tipo = [todos_txt] + sorted(
-    df["TipoDocumento"].dropna().unique()
+lista_disciplina = [
+    todos_txt
+] + sorted(
+    df["Disciplina"]
+    .dropna()
+    .unique()
 )
 
-lista_ano = [todos_txt] + sorted(
-    df["Ano"].dropna().unique()
+lista_tipo = [
+    todos_txt
+] + sorted(
+    df["TipoDocumento"]
+    .dropna()
+    .unique()
+)
+
+lista_ano = [
+    todos_txt
+] + sorted(
+    df["Ano"]
+    .dropna()
+    .unique()
 )
 
 disciplina = st.sidebar.selectbox(
@@ -366,30 +493,39 @@ ano = st.sidebar.selectbox(
     lista_ano
 )
 
+
 # =========================
 # FILTRO
 # =========================
+
 df_filtro = df.copy()
 
 if disciplina != todos_txt:
+
     df_filtro = df_filtro[
         df_filtro["Disciplina"] == disciplina
     ]
 
 if tipo_doc != todos_txt:
+
     df_filtro = df_filtro[
         df_filtro["TipoDocumento"] == tipo_doc
     ]
 
 if ano != todos_txt:
+
     df_filtro = df_filtro[
         df_filtro["Ano"] == ano
     ]
 
+
 # =========================
 # RESUMO
 # =========================
-st.subheader(resumo_txt)
+
+st.subheader(
+    resumo_txt
+)
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -413,12 +549,19 @@ col4.metric(
     ano
 )
 
+
 # =========================
 # GRÁFICO DE PIZZA - TOTAL DE ADPs
 # =========================
-if area == "ADP" and "StatusADP" in df_filtro.columns:
 
-    st.subheader(total_adp_txt)
+if (
+    area == "ADP"
+    and "StatusADP" in df_filtro.columns
+):
+
+    st.subheader(
+        total_adp_txt
+    )
 
     df_status_total = df_filtro.copy()
 
@@ -476,17 +619,20 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
 
     if not df_status_total.empty:
 
-        pizza_adp_df = df_status_total.groupby(
-            "StatusGrafico"
-        ).agg(
-            Quantidade=("Registro", "count"),
-            Registros=(
-                "Registro",
-                lambda x: "<br>".join(
-                    map(str, x.dropna())
+        pizza_adp_df = (
+            df_status_total
+            .groupby("StatusGrafico")
+            .agg(
+                Quantidade=("Registro", "count"),
+                Registros=(
+                    "Registro",
+                    lambda x: "<br>".join(
+                        map(str, x.dropna())
+                    )
                 )
             )
-        ).reset_index()
+            .reset_index()
+        )
 
         pizza_adp_df["StatusGrafico"] = pd.Categorical(
             pizza_adp_df["StatusGrafico"],
@@ -526,9 +672,7 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
         fig_pizza_adp.update_layout(
             height=450,
             showlegend=True,
-            legend_title_text=(
-                "Status"
-            ),
+            legend_title_text="Status",
             margin=dict(
                 l=20,
                 r=20,
@@ -544,18 +688,32 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
         )
 
     else:
-        st.info(nenhum_status_txt)
+
+        st.info(
+            nenhum_status_txt
+        )
+
 
 # =========================
 # STATUS DE APROVAÇÃO DA ADP
 # =========================
-if area == "ADP" and "StatusADP" in df_filtro.columns:
 
-    st.subheader(status_adp_txt)
+if (
+    area == "ADP"
+    and "StatusADP" in df_filtro.columns
+):
 
-    df_status = df_filtro.dropna(
-        subset=["StatusADP"]
-    ).copy()
+    st.subheader(
+        status_adp_txt
+    )
+
+    df_status = (
+        df_filtro
+        .dropna(
+            subset=["StatusADP"]
+        )
+        .copy()
+    )
 
     if not df_status.empty:
 
@@ -633,7 +791,9 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
             cols_status = st.columns(3)
 
             for idx, mes in enumerate(
-                meses_com_status[linha:linha + 3]
+                meses_com_status[
+                    linha:linha + 3
+                ]
             ):
 
                 with cols_status[idx]:
@@ -682,7 +842,9 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                     )
 
                     total_status_df = pd.DataFrame({
-                        "StatusADP": [total_txt],
+                        "StatusADP": [
+                            total_txt
+                        ],
                         "Quantidade": [
                             total_quantidade_status
                         ],
@@ -702,11 +864,10 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                     status_mes_df["Cor"] = (
                         status_mes_df["StatusADP"]
                         .apply(
-                            lambda x: (
-                                "TOTAL"
-                                if x == total_txt
-                                else "STATUS"
-                            )
+                            lambda x:
+                            "TOTAL"
+                            if x == total_txt
+                            else "STATUS"
                         )
                     )
 
@@ -719,7 +880,8 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                         color="Cor",
                         color_discrete_map={
                             "STATUS": cores[
-                                (linha + idx) % len(cores)
+                                (linha + idx)
+                                % len(cores)
                             ],
                             "TOTAL": "#002F6C"
                         }
@@ -762,15 +924,25 @@ if area == "ADP" and "StatusADP" in df_filtro.columns:
                     )
 
     else:
-        st.info(nenhum_status_txt)
+
+        st.info(
+            nenhum_status_txt
+        )
+
 
 # =========================
 # GRÁFICOS POR MÊS E SEMANA
 # =========================
-st.subheader(grafico_txt)
+
+st.subheader(
+    grafico_txt
+)
 
 cores = px.colors.qualitative.Set2
-ordem_meses = list(meses.values())
+
+ordem_meses = list(
+    meses.values()
+)
 
 meses_com_dados = [
     mes
@@ -789,7 +961,9 @@ for linha in range(
     cols = st.columns(3)
 
     for idx, mes in enumerate(
-        meses_com_dados[linha:linha + 3]
+        meses_com_dados[
+            linha:linha + 3
+        ]
     ):
 
         with cols[idx]:
@@ -818,7 +992,9 @@ for linha in range(
 
             semana_df["SemanaNum"] = pd.to_numeric(
                 semana_df["Semana"]
-                .str.extract(r"(\d+)")[0],
+                .str.extract(
+                    r"(\d+)"
+                )[0],
                 errors="coerce"
             ).fillna(0).astype(int)
 
@@ -838,14 +1014,18 @@ for linha in range(
             )
 
             total_df = pd.DataFrame({
-                "Semana": [total_txt],
+                "Semana": [
+                    total_txt
+                ],
                 "Quantidade": [
                     total_quantidade
                 ],
                 "Registros": [
                     total_registros
                 ],
-                "SemanaNum": [999]
+                "SemanaNum": [
+                    999
+                ]
             })
 
             semana_df = pd.concat(
@@ -859,11 +1039,10 @@ for linha in range(
             semana_df["Cor"] = (
                 semana_df["Semana"]
                 .apply(
-                    lambda x: (
-                        "TOTAL"
-                        if x == total_txt
-                        else "SEMANA"
-                    )
+                    lambda x:
+                    "TOTAL"
+                    if x == total_txt
+                    else "SEMANA"
                 )
             )
 
@@ -876,7 +1055,8 @@ for linha in range(
                 color="Cor",
                 color_discrete_map={
                     "SEMANA": cores[
-                        (linha + idx) % len(cores)
+                        (linha + idx)
+                        % len(cores)
                     ],
                     "TOTAL": "#002F6C"
                 }
@@ -916,12 +1096,92 @@ for linha in range(
                 )
             )
 
+
 # =========================
 # TABELA
 # =========================
-st.subheader(tabela_txt)
+
+st.subheader(
+    tabela_txt
+)
+
+
+# Somente estas colunas aparecem
+# na tabela final.
+#
+# Dia e SemanaNum continuam no DataFrame
+# para os calculos internos, mas ficam ocultas.
+
+colunas_tabela = [
+    "Data",
+    "Disciplina",
+    "Registro",
+    "NomeDocumento",
+    "TipoDocumento"
+]
+
+
+if area == "ADP":
+
+    colunas_tabela.append(
+        "StatusADP"
+    )
+
+
+colunas_tabela = [
+    coluna
+    for coluna in colunas_tabela
+    if coluna in df_filtro.columns
+]
+
+
+df_tabela = (
+    df_filtro[
+        colunas_tabela
+    ]
+    .sort_values("Data")
+    .copy()
+)
+
+
+# =========================
+# NOMES DAS COLUNAS
+# =========================
+
+if lang == "PT":
+
+    nomes_colunas = {
+        "Data": "Data",
+        "Disciplina": "Disciplina",
+        "Registro": "Registro",
+        "NomeDocumento": "Nome do Documento",
+        "TipoDocumento": "Tipo de Documento",
+        "StatusADP": "Status ADP"
+    }
+
+else:
+
+    nomes_colunas = {
+        "Data": "Date",
+        "Disciplina": "Discipline",
+        "Registro": "Record",
+        "NomeDocumento": "Document Name",
+        "TipoDocumento": "Document Type",
+        "StatusADP": "ADP Status"
+    }
+
+
+df_tabela = df_tabela.rename(
+    columns=nomes_colunas
+)
+
+
+# =========================
+# EXIBIÇÃO
+# =========================
 
 st.dataframe(
-    df_filtro.sort_values("Data"),
-    use_container_width=True
+    df_tabela,
+    use_container_width=True,
+    hide_index=True
 )
