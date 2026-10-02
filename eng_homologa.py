@@ -1044,7 +1044,7 @@ if lang == "PT":
     nomes_colunas = {
         "Data": "Data",
         "Disciplina": "Disciplina",
-        "Registro": "Registro",
+        "Registro": "Documento",
         "NomeDocumento": "Nome do Documento",
         "TipoDocumento": "Tipo de Documento",
         "StatusADP": "Status ADP"
@@ -1054,7 +1054,7 @@ else:
     nomes_colunas = {
         "Data": "Date",
         "Disciplina": "Discipline",
-        "Registro": "Record",
+        "Registro": "Document",
         "NomeDocumento": "Document Name",
         "TipoDocumento": "Document Type",
         "StatusADP": "ADP Status"
