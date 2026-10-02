@@ -1097,9 +1097,9 @@ st.subheader(
 )
 
 
-# ============================================================
+# =========================
 # COLUNAS DA TABELA
-# ============================================================
+# =========================
 
 colunas_tabela = [
     "Data",
@@ -1108,7 +1108,6 @@ colunas_tabela = [
     "NomeDocumento",
     "TipoDocumento"
 ]
-
 
 if area == "ADP":
 
@@ -1133,18 +1132,20 @@ df_tabela = (
 )
 
 
-# ============================================================
-# DATA - FORMATO VISUAL
-# ============================================================
+# =========================
+# DATA
+# =========================
 
-df_tabela["Data"] = df_tabela["Data"].dt.strftime(
+df_tabela["Data"] = df_tabela[
+    "Data"
+].dt.strftime(
     "%m/%d/%Y"
 )
 
 
-# ============================================================
+# =========================
 # NOMES DAS COLUNAS
-# ============================================================
+# =========================
 
 if lang == "PT":
 
@@ -1174,18 +1175,18 @@ df_tabela = df_tabela.rename(
 )
 
 
-# ============================================================
-# CONFIGURAÇÃO DA TABELA AGGRID
-# ============================================================
+# =========================
+# AG GRID
+# =========================
 
 gb = GridOptionsBuilder.from_dataframe(
     df_tabela
 )
 
 
-# ============================================================
-# FILTRO INDIVIDUAL EM CADA COLUNA
-# ============================================================
+# =========================
+# FILTROS NAS COLUNAS
+# =========================
 
 gb.configure_default_column(
     filter=True,
@@ -1196,9 +1197,9 @@ gb.configure_default_column(
 )
 
 
-# ============================================================
-# CONFIGURAÇÃO ESPECÍFICA DAS COLUNAS
-# ============================================================
+# =========================
+# DATA
+# =========================
 
 if "Data" in df_tabela.columns:
 
@@ -1212,6 +1213,10 @@ if "Data" in df_tabela.columns:
     )
 
 
+# =========================
+# DISCIPLINA
+# =========================
+
 if "Disciplina" in df_tabela.columns:
 
     gb.configure_column(
@@ -1223,6 +1228,10 @@ if "Disciplina" in df_tabela.columns:
         minWidth=130
     )
 
+
+# =========================
+# REGISTRO
+# =========================
 
 if "Registro" in df_tabela.columns:
 
@@ -1236,6 +1245,10 @@ if "Registro" in df_tabela.columns:
     )
 
 
+# =========================
+# NOME DO DOCUMENTO
+# =========================
+
 if "Nome do Documento" in df_tabela.columns:
 
     gb.configure_column(
@@ -1244,9 +1257,13 @@ if "Nome do Documento" in df_tabela.columns:
         floatingFilter=True,
         sortable=True,
         resizable=True,
-        minWidth=250
+        minWidth=280
     )
 
+
+# =========================
+# TIPO DE DOCUMENTO
+# =========================
 
 if "Tipo de Documento" in df_tabela.columns:
 
@@ -1260,6 +1277,10 @@ if "Tipo de Documento" in df_tabela.columns:
     )
 
 
+# =========================
+# STATUS ADP
+# =========================
+
 if "Status ADP" in df_tabela.columns:
 
     gb.configure_column(
@@ -1272,9 +1293,9 @@ if "Status ADP" in df_tabela.columns:
     )
 
 
-# ============================================================
-# CONFIGURAÇÕES GERAIS DA TABELA
-# ============================================================
+# =========================
+# CONFIGURAÇÕES DA TABELA
+# =========================
 
 gb.configure_grid_options(
     domLayout="normal",
@@ -1283,9 +1304,9 @@ gb.configure_grid_options(
 )
 
 
-# ============================================================
-# TABELA FINAL
-# ============================================================
+# =========================
+# EXIBIÇÃO DA TABELA
+# =========================
 
 AgGrid(
     df_tabela,
