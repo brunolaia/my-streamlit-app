@@ -343,16 +343,6 @@ progress_bar.empty()
 # TRATAMENTO
 # =========================
 
-# Estrutura do Excel:
-#
-# A = Data
-# B = Disciplina
-# C = Registro
-# D = TipoDocumento
-# E = StatusADP (somente ADP)
-# F = NomeDocumento
-
-
 if area == "ADP":
 
     while df.shape[1] < 6:
@@ -1098,7 +1088,7 @@ for linha in range(
 
 
 # =========================
-# TABELA
+# TABELA DE DADOS DETALHADOS
 # =========================
 
 st.subheader(
@@ -1106,11 +1096,9 @@ st.subheader(
 )
 
 
-# Somente estas colunas aparecem
-# na tabela final.
-#
-# Dia e SemanaNum continuam no DataFrame
-# para os calculos internos, mas ficam ocultas.
+# ============================================================
+# COLUNAS DA TABELA
+# ============================================================
 
 colunas_tabela = [
     "Data",
@@ -1119,7 +1107,6 @@ colunas_tabela = [
     "NomeDocumento",
     "TipoDocumento"
 ]
-
 
 if area == "ADP":
 
@@ -1144,9 +1131,31 @@ df_tabela = (
 )
 
 
-# =========================
+# ============================================================
+# FORMATAÇÃO DA DATA
+# ============================================================
+#
+# A data continua sendo uma data no DataFrame original.
+# Aqui fazemos somente a alteração visual da tabela.
+#
+# Exemplo:
+#
+# 2022-11-03 00:00:00
+#
+# passa a aparecer como:
+#
+# 11/03/2022
+#
+# ============================================================
+
+df_tabela["Data"] = df_tabela["Data"].dt.strftime(
+    "%m/%d/%Y"
+)
+
+
+# ============================================================
 # NOMES DAS COLUNAS
-# =========================
+# ============================================================
 
 if lang == "PT":
 
@@ -1176,12 +1185,134 @@ df_tabela = df_tabela.rename(
 )
 
 
-# =========================
-# EXIBIÇÃO
-# =========================
+# ============================================================
+# FILTROS INDIVIDUAIS DA TABELA
+# ============================================================
+#
+# Cada coluna possui seu próprio campo de pesquisa.
+#
+# O filtro funciona de forma independente.
+#
+# Exemplo:
+#
+# Registro -> 12345
+#
+# irá mostrar somente registros que contenham 12345.
+#
+# ============================================================
+
+if lang == "PT":
+
+    placeholder_data = "Filtrar data..."
+    placeholder_disciplina = "Filtrar disciplina..."
+    placeholder_registro = "Filtrar registro..."
+    placeholder_nome = "Filtrar documento..."
+    placeholder_tipo = "Filtrar tipo..."
+    placeholder_status = "Filtrar status..."
+
+else:
+
+    placeholder_data = "Filter date..."
+    placeholder_disciplina = "Filter discipline..."
+    placeholder_registro = "Filter record..."
+    placeholder_nome = "Filter document..."
+    placeholder_tipo = "Filter type..."
+    placeholder_status = "Filter status..."
+
+
+# ------------------------------------------------------------
+# Criar uma linha de filtros alinhada com as colunas
+# ------------------------------------------------------------
+
+filtros_colunas = st.columns(
+    len(df_tabela.columns)
+)
+
+
+filtros = {}
+
+
+for i, coluna in enumerate(
+    df_tabela.columns
+):
+
+    if coluna in ["Data", "Date"]:
+
+        placeholder = placeholder_data
+
+    elif coluna in ["Disciplina", "Discipline"]:
+
+        placeholder = placeholder_disciplina
+
+    elif coluna in ["Registro", "Record"]:
+
+        placeholder = placeholder_registro
+
+    elif coluna in [
+        "Nome do Documento",
+        "Document Name"
+    ]:
+
+        placeholder = placeholder_nome
+
+    elif coluna in [
+        "Tipo de Documento",
+        "Document Type"
+    ]:
+
+        placeholder = placeholder_tipo
+
+    elif coluna in [
+        "Status ADP",
+        "ADP Status"
+    ]:
+
+        placeholder = placeholder_status
+
+    else:
+
+        placeholder = "🔎"
+
+
+    with filtros_colunas[i]:
+
+        filtros[coluna] = st.text_input(
+            "🔎",
+            placeholder=placeholder,
+            key=f"filtro_tabela_{lang}_{coluna}"
+        )
+
+
+# ============================================================
+# APLICAR FILTROS INDIVIDUAIS
+# ============================================================
+
+df_tabela_filtrada = df_tabela.copy()
+
+
+for coluna, valor_filtro in filtros.items():
+
+    if valor_filtro.strip():
+
+        df_tabela_filtrada = (
+            df_tabela_filtrada[
+                df_tabela_filtrada[coluna]
+                .astype(str)
+                .str.contains(
+                    valor_filtro.strip(),
+                    case=False,
+                    na=False
+                )
+            ]
+        )
+
+
+# ============================================================
+# EXIBIÇÃO DA TABELA
+# ============================================================
 
 st.dataframe(
-    df_tabela,
+    df_tabela_filtrada,
     use_container_width=True,
     hide_index=True
 )
