@@ -6,6 +6,7 @@ import plotly.express as px
 import time
 import requests
 from datetime import datetime
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 
 # =========================
@@ -1088,7 +1089,7 @@ for linha in range(
 
 
 # =========================
-# TABELA DE DADOS DETALHADOS
+# TABELA
 # =========================
 
 st.subheader(
@@ -1107,6 +1108,7 @@ colunas_tabela = [
     "NomeDocumento",
     "TipoDocumento"
 ]
+
 
 if area == "ADP":
 
@@ -1132,20 +1134,7 @@ df_tabela = (
 
 
 # ============================================================
-# FORMATAÇÃO DA DATA
-# ============================================================
-#
-# A data continua sendo uma data no DataFrame original.
-# Aqui fazemos somente a alteração visual da tabela.
-#
-# Exemplo:
-#
-# 2022-11-03 00:00:00
-#
-# passa a aparecer como:
-#
-# 11/03/2022
-#
+# DATA - FORMATO VISUAL
 # ============================================================
 
 df_tabela["Data"] = df_tabela["Data"].dt.strftime(
@@ -1186,133 +1175,125 @@ df_tabela = df_tabela.rename(
 
 
 # ============================================================
-# FILTROS INDIVIDUAIS DA TABELA
-# ============================================================
-#
-# Cada coluna possui seu próprio campo de pesquisa.
-#
-# O filtro funciona de forma independente.
-#
-# Exemplo:
-#
-# Registro -> 12345
-#
-# irá mostrar somente registros que contenham 12345.
-#
+# CONFIGURAÇÃO DA TABELA AGGRID
 # ============================================================
 
-if lang == "PT":
-
-    placeholder_data = "Filtrar data..."
-    placeholder_disciplina = "Filtrar disciplina..."
-    placeholder_registro = "Filtrar registro..."
-    placeholder_nome = "Filtrar documento..."
-    placeholder_tipo = "Filtrar tipo..."
-    placeholder_status = "Filtrar status..."
-
-else:
-
-    placeholder_data = "Filter date..."
-    placeholder_disciplina = "Filter discipline..."
-    placeholder_registro = "Filter record..."
-    placeholder_nome = "Filter document..."
-    placeholder_tipo = "Filter type..."
-    placeholder_status = "Filter status..."
-
-
-# ------------------------------------------------------------
-# Criar uma linha de filtros alinhada com as colunas
-# ------------------------------------------------------------
-
-filtros_colunas = st.columns(
-    len(df_tabela.columns)
+gb = GridOptionsBuilder.from_dataframe(
+    df_tabela
 )
 
 
-filtros = {}
+# ============================================================
+# FILTRO INDIVIDUAL EM CADA COLUNA
+# ============================================================
+
+gb.configure_default_column(
+    filter=True,
+    sortable=True,
+    resizable=True,
+    floatingFilter=True,
+    editable=False
+)
 
 
-for i, coluna in enumerate(
-    df_tabela.columns
-):
+# ============================================================
+# CONFIGURAÇÃO ESPECÍFICA DAS COLUNAS
+# ============================================================
 
-    if coluna in ["Data", "Date"]:
+if "Data" in df_tabela.columns:
 
-        placeholder = placeholder_data
+    gb.configure_column(
+        "Data",
+        filter="agTextColumnFilter",
+        floatingFilter=True,
+        sortable=True,
+        resizable=True,
+        minWidth=120
+    )
 
-    elif coluna in ["Disciplina", "Discipline"]:
 
-        placeholder = placeholder_disciplina
+if "Disciplina" in df_tabela.columns:
 
-    elif coluna in ["Registro", "Record"]:
+    gb.configure_column(
+        "Disciplina",
+        filter="agTextColumnFilter",
+        floatingFilter=True,
+        sortable=True,
+        resizable=True,
+        minWidth=130
+    )
 
-        placeholder = placeholder_registro
 
-    elif coluna in [
+if "Registro" in df_tabela.columns:
+
+    gb.configure_column(
+        "Registro",
+        filter="agTextColumnFilter",
+        floatingFilter=True,
+        sortable=True,
+        resizable=True,
+        minWidth=200
+    )
+
+
+if "Nome do Documento" in df_tabela.columns:
+
+    gb.configure_column(
         "Nome do Documento",
-        "Document Name"
-    ]:
+        filter="agTextColumnFilter",
+        floatingFilter=True,
+        sortable=True,
+        resizable=True,
+        minWidth=250
+    )
 
-        placeholder = placeholder_nome
 
-    elif coluna in [
+if "Tipo de Documento" in df_tabela.columns:
+
+    gb.configure_column(
         "Tipo de Documento",
-        "Document Type"
-    ]:
+        filter="agTextColumnFilter",
+        floatingFilter=True,
+        sortable=True,
+        resizable=True,
+        minWidth=180
+    )
 
-        placeholder = placeholder_tipo
 
-    elif coluna in [
+if "Status ADP" in df_tabela.columns:
+
+    gb.configure_column(
         "Status ADP",
-        "ADP Status"
-    ]:
-
-        placeholder = placeholder_status
-
-    else:
-
-        placeholder = "🔎"
-
-
-    with filtros_colunas[i]:
-
-        filtros[coluna] = st.text_input(
-            "🔎",
-            placeholder=placeholder,
-            key=f"filtro_tabela_{lang}_{coluna}"
-        )
+        filter="agTextColumnFilter",
+        floatingFilter=True,
+        sortable=True,
+        resizable=True,
+        minWidth=160
+    )
 
 
 # ============================================================
-# APLICAR FILTROS INDIVIDUAIS
+# CONFIGURAÇÕES GERAIS DA TABELA
 # ============================================================
 
-df_tabela_filtrada = df_tabela.copy()
-
-
-for coluna, valor_filtro in filtros.items():
-
-    if valor_filtro.strip():
-
-        df_tabela_filtrada = (
-            df_tabela_filtrada[
-                df_tabela_filtrada[coluna]
-                .astype(str)
-                .str.contains(
-                    valor_filtro.strip(),
-                    case=False,
-                    na=False
-                )
-            ]
-        )
+gb.configure_grid_options(
+    domLayout="normal",
+    suppressHorizontalScroll=False,
+    animateRows=True
+)
 
 
 # ============================================================
-# EXIBIÇÃO DA TABELA
+# TABELA FINAL
 # ============================================================
 
-st.dataframe(
-    df_tabela_filtrada,
-    use_container_width=True,
-    hide_index=True
+AgGrid(
+    df_tabela,
+    gridOptions=gb.build(),
+    height=500,
+    width="100%",
+    fit_columns_on_grid_load=False,
+    allow_unsafe_jscode=False,
+    theme="streamlit",
+    key=f"tabela_detalhada_{lang}_{area}"
 )
