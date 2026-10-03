@@ -1065,10 +1065,111 @@ df_tabela = df_tabela.rename(
 )
 
 # =========================
+# FILTROS INDIVIDUAIS DA TABELA
+# =========================
+# Os filtros abaixo funcionam como os filtros
+# de uma tabela do Excel: cada coluna possui
+# seu próprio filtro e permite selecionar
+# vários valores simultaneamente.
+
+st.markdown(
+    f"""
+    <style>
+    div[data-testid="stHorizontalBlock"] div[data-testid="stMultiSelect"] label {{
+        font-size: 11px !important;
+        font-weight: 600 !important;
+    }}
+
+    div[data-testid="stHorizontalBlock"] div[data-testid="stMultiSelect"] {{
+        margin-bottom: 8px;
+    }}
+
+    div[data-testid="stHorizontalBlock"] div[data-testid="stMultiSelect"] > div {{
+        min-height: 38px;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Filtros individuais
+filtros_tabela = {}
+
+# Tradução dos nomes para os filtros
+if lang == "PT":
+    placeholder_filtro = "🔽 Filtrar..."
+    limpar_filtros_txt = "🧹 Limpar filtros da tabela"
+else:
+    placeholder_filtro = "🔽 Filter..."
+    limpar_filtros_txt = "🧹 Clear table filters"
+
+# Cria uma linha de filtros alinhada às colunas da tabela
+colunas_filtro = st.columns(len(colunas_tabela))
+
+for idx, coluna in enumerate(colunas_tabela):
+
+    nome_exibicao = nomes_colunas.get(
+        coluna,
+        coluna
+    )
+
+    # Valores disponíveis para cada coluna
+    valores_coluna = (
+        df_tabela[coluna]
+        .dropna()
+        .astype(str)
+        .unique()
+        .tolist()
+    )
+
+    valores_coluna = sorted(
+        valores_coluna,
+        key=lambda x: x.lower()
+    )
+
+    with colunas_filtro[idx]:
+
+        filtros_tabela[coluna] = st.multiselect(
+            nome_exibicao,
+            options=valores_coluna,
+            default=[],
+            placeholder=placeholder_filtro,
+            key=f"filtro_coluna_{lang}_{area}_{coluna}"
+        )
+
+# Botão para limpar todos os filtros
+if any(filtros_tabela.values()):
+
+    if st.button(
+        limpar_filtros_txt,
+        key=f"limpar_filtros_tabela_{lang}_{area}"
+    ):
+        for coluna in colunas_tabela:
+            st.session_state.pop(
+                f"filtro_coluna_{lang}_{area}_{coluna}",
+                None
+            )
+
+        st.rerun()
+
+# Aplicação dos filtros individuais
+df_tabela_filtrado = df_tabela.copy()
+
+for coluna, valores_selecionados in filtros_tabela.items():
+
+    if valores_selecionados:
+
+        df_tabela_filtrado = df_tabela_filtrado[
+            df_tabela_filtrado[coluna]
+            .astype(str)
+            .isin(valores_selecionados)
+        ]
+
+# =========================
 # EXIBIÇÃO
 # =========================
 st.dataframe(
-    df_tabela,
+    df_tabela_filtrado,
     use_container_width=True,
     hide_index=True
 )
