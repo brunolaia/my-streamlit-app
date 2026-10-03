@@ -239,7 +239,7 @@ else:
 st.title(titulo)
 
 st.markdown(
-    f"<p style='color:white; font-size:14px;'>{dev}</p>",
+    f"<p style='color:white; font-size:28px; font-weight:500;'>{dev}</p>",
     unsafe_allow_html=True
 )
 
