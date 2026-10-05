@@ -1,9 +1,7 @@
 import streamlit as st
 from datetime import datetime
-import os
-import platform
-import subprocess
 import html
+import json
 
 st.set_page_config(
     page_title="Pesquisa de Arquivos A-CEDOC",
@@ -50,7 +48,6 @@ st.markdown(
         margin-bottom: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.35);
         transition: 0.2s;
-        cursor: pointer;
     }
 
     .card:hover {
@@ -74,6 +71,32 @@ st.markdown(
         margin: 3px;
         font-size: 12px;
         color: #cfd6e6;
+    }
+
+    .copy-folder {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 7px 12px;
+        background: #1c2230;
+        border: 1px solid #2a2f3a;
+        border-radius: 8px;
+        color: #cfd6e6;
+        font-size: 12px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .copy-folder:hover {
+        background: #2a3244;
+        border: 1px solid #3a435a;
+        color: #ffffff;
+    }
+
+    .copy-success {
+        display: none;
+        color: #86efac;
+        font-size: 12px;
+        margin-left: 8px;
     }
     </style>
     """,
@@ -124,7 +147,6 @@ if arquivo_txt:
                 if linha.strip()
             ]
 
-            # Data/hora em que o TXT foi carregado
             data_atualizacao = datetime.now().strftime(
                 "%d/%m/%Y %H:%M"
             )
@@ -134,60 +156,12 @@ if arquivo_txt:
             )
 
         except Exception:
+
             st.error(
                 "Erro ao carregar arquivo TXT"
             )
 
             st.stop()
-
-# =========================
-# FUNÇÃO PARA ABRIR PASTA
-# =========================
-
-def abrir_pasta_explorer(caminho):
-
-    try:
-
-        # Remove aspas extras
-        caminho = caminho.strip().strip('"')
-
-        # Normaliza barras
-        caminho = caminho.replace("/", "\\")
-
-        # Se o caminho aponta para um arquivo existente
-        if os.path.isfile(caminho):
-
-            pasta = os.path.dirname(caminho)
-
-        else:
-
-            # Para caminhos que não podem ser validados
-            # localmente, considera tudo antes do último "\"
-            if "\\" in caminho:
-
-                pasta = caminho.rsplit("\\", 1)[0]
-
-            else:
-
-                pasta = caminho
-
-        # Verifica se está no Windows
-        if platform.system() != "Windows":
-
-            return False
-
-        # Abre o Windows Explorer
-        subprocess.Popen(
-            ["explorer.exe", pasta],
-            shell=False
-        )
-
-        return True
-
-    except Exception:
-
-        return False
-
 
 # =========================
 # BUSCA
@@ -271,20 +245,36 @@ if st.session_state.busca:
 
     for indice, caminho in enumerate(resultados):
 
-        # Nome do arquivo
+        # Normaliza o caminho
         caminho_normalizado = caminho.replace(
             "/",
             "\\"
         )
 
-        nome_arquivo = (
-            caminho_normalizado
-            .rstrip("\\")
-            .rsplit("\\", 1)[-1]
-        )
+        # Remove barra final
+        caminho_normalizado = caminho_normalizado.rstrip("\\")
 
+        # Nome do arquivo
+        nome_arquivo = caminho_normalizado.rsplit(
+            "\\",
+            1
+        )[-1]
+
+        # Pasta onde o arquivo está
+        if "\\" in caminho_normalizado:
+
+            pasta = caminho_normalizado.rsplit(
+                "\\",
+                1
+            )[0]
+
+        else:
+
+            pasta = caminho_normalizado
+
+        # Escapa para HTML
         caminho_html = html.escape(
-            caminho,
+            caminho_normalizado,
             quote=True
         )
 
@@ -293,49 +283,117 @@ if st.session_state.busca:
             quote=True
         )
 
+        # Converte o caminho para uma string JavaScript segura
+        pasta_js = json.dumps(pasta)
+
+        # ID único
+        botao_id = f"copiar_pasta_{indice}"
+
+        sucesso_id = f"sucesso_{indice}"
+
         # =========================
-        # CARD
+        # CARD DO ARQUIVO
         # =========================
 
         st.markdown(
             f"""
             <div class="card"
                  title="📁 {caminho_html}">
+
                 <div class="file-text">
                     📄 {nome_html}
                 </div>
+
+                <div
+                    class="copy-folder"
+                    id="{botao_id}"
+                    onclick='copiarPasta({pasta_js}, "{sucesso_id}")'>
+                    📂 Copiar pasta
+                </div>
+
+                <span
+                    class="copy-success"
+                    id="{sucesso_id}">
+                    ✓ Caminho copiado
+                </span>
+
             </div>
             """,
             unsafe_allow_html=True
         )
 
-        # =========================
-        # BOTÃO ABRIR PASTA
-        # =========================
+# =========================
+# JAVASCRIPT - COPIAR PASTA
+# =========================
 
-        if st.button(
-            "📂 Abrir pasta",
-            key=f"abrir_pasta_{indice}",
-            use_container_width=False
-        ):
+st.markdown(
+    """
+    <script>
 
-            sucesso = abrir_pasta_explorer(
-                caminho
-            )
+    function copiarPasta(caminho, sucessoId) {
 
-            if sucesso:
+        navigator.clipboard.writeText(caminho).then(
+            function() {
 
-                st.success(
-                    "📂 Pasta aberta no Windows Explorer."
-                )
+                var mensagem =
+                    document.getElementById(sucessoId);
 
-            else:
+                if (mensagem) {
 
-                st.warning(
-                    "⚠️ O Windows Explorer só pode ser "
-                    "aberto diretamente quando o Streamlit "
-                    "está sendo executado no Windows."
-                )
+                    mensagem.style.display = "inline";
+
+                    setTimeout(function() {
+
+                        mensagem.style.display = "none";
+
+                    }, 2500);
+                }
+
+            }
+        ).catch(
+            function() {
+
+                // Método alternativo para navegadores
+                // que não permitem Clipboard API
+
+                var campo =
+                    document.createElement("textarea");
+
+                campo.value = caminho;
+
+                campo.style.position = "fixed";
+                campo.style.left = "-9999px";
+
+                document.body.appendChild(campo);
+
+                campo.focus();
+                campo.select();
+
+                document.execCommand("copy");
+
+                document.body.removeChild(campo);
+
+                var mensagem =
+                    document.getElementById(sucessoId);
+
+                if (mensagem) {
+
+                    mensagem.style.display = "inline";
+
+                    setTimeout(function() {
+
+                        mensagem.style.display = "none";
+
+                    }, 2500);
+                }
+            }
+        );
+    }
+
+    </script>
+    """,
+    unsafe_allow_html=True
+)
 
 # =========================
 # HISTÓRICO
